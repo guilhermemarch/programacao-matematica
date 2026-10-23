@@ -176,7 +176,7 @@ Na foto da p21, a 3ª restrição do primal está escrita `0,4x1 + 0,3x2 ≤ 3`,
 8. Contas de fração no canto da página: `2 - 2/3 = (6 - 2)/3 = 4/3`.
 9. No fim, os valores das variáveis, Z calculado por substituição e o resultado dentro de uma caixa.
 
-A saída do `resolver.py` segue essa ordem: o pivô aparece como **[3]** (para circular), as setas como a linha "Multiplicadores" e a caixa como a linha "RESPOSTA".
+A saída do `resolver.py` é a versão enxuta, só com o que se copia: um quadro por iteração, com o pivô como **[3]** (para circular), as razões e a linha "Operações". Em `Operações: L2 ÷ 3; LZ + 4 × L2; L1 - 1 × L2`, o `L2 ÷ 3` é o `÷ 3` ao lado da linha pivô, e cada `LZ + 4 × L2` é uma seta saindo da nova L2 com o multiplicador 4 circulado. O quadro intermediário do item 7 (só a linha pivô dividida) e as contas do item 8 não aparecem na saída. A caixa do item 9 é a linha "Resposta".
 
 ## 3. Exemplos resolvidos
 
@@ -224,40 +224,11 @@ Z - 3x1 - 4x2 = 0
 | L2 | 0 | 2 | **[3]** | 0 | 1 | 9 |
 
 - Coluna pivô: **x2** (o mais negativo da LZ: -4)
-- Razões (bn ÷ elemento positivo da coluna x2):
-  - L1: 6 ÷ 1 = 6
-  - L2: 9 ÷ 3 = 3 ← menor
+- Razões: L1: 6 ÷ 1 = 6 · L2: 9 ÷ 3 = 3 ← menor
 - Linha pivô: **L2** · Pivô: **3**
+- Operações: L2 ÷ 3; LZ + 4 × L2; L1 - 1 × L2
 
-Passo 1 — dividir a linha pivô: `nova L2 = L2 ÷ 3`
-
-- x1: 2 ÷ 3 = 2/3
-- x2: 3 ÷ 3 = 1
-- xf2: 1 ÷ 3 = 1/3
-- bn: 9 ÷ 3 = 3
-
-**Quadro 2** (só a linha pivô dividida; as outras copiadas)
-
-| Linha | Z | x1 | x2 | xf1 | xf2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | -3 | -4 | 0 | 0 | 0 |
-| L1 | 0 | 2 | 1 | 1 | 0 | 6 |
-| L2 | 0 | 2/3 | 1 | 0 | 1/3 | 3 |
-
-Multiplicadores (no papel: setas saindo da nova L2, com o número circulado e "+"): LZ: × 4 · L1: × (-1)
-
-Passo 2 — zerar a coluna x2 nas outras linhas (só aparecem os elementos que mudam):
-
-- nova LZ = LZ + 4 × (nova L2)
-  - x1: -3 + 4 × 2/3 = -3 + 8/3 = (-9 + 8)/3 = -1/3
-  - xf2: 0 + 4 × 1/3 = 4/3
-  - bn: 0 + 4 × 3 = 12
-- nova L1 = L1 + (-1) × (nova L2)
-  - x1: 2 + (-1) × 2/3 = 2 - 2/3 = (6 - 2)/3 = 4/3
-  - xf2: 0 + (-1) × 1/3 = -1/3
-  - bn: 6 + (-1) × 3 = 6 - 3 = 3
-
-**Quadro 3**
+**Quadro 2**
 
 | Linha | Z | x1 | x2 | xf1 | xf2 | bn |
 |:--|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -266,40 +237,11 @@ Passo 2 — zerar a coluna x2 nas outras linhas (só aparecem os elementos que m
 | L2 | 0 | 2/3 | 1 | 0 | 1/3 | 3 |
 
 - Coluna pivô: **x1** (o mais negativo da LZ: -1/3)
-- Razões (bn ÷ elemento positivo da coluna x1):
-  - L1: 3 ÷ 4/3 = 3 × 3/4 = 9/4 = 2,25 ← menor
-  - L2: 3 ÷ 2/3 = 3 × 3/2 = 9/2 = 4,5
+- Razões: L1: 3 ÷ 4/3 = 9/4 = 2,25 ← menor · L2: 3 ÷ 2/3 = 9/2 = 4,5
 - Linha pivô: **L1** · Pivô: **4/3**
+- Operações: L1 ÷ 4/3; LZ + 1/3 × L1; L2 - 2/3 × L1
 
-Passo 1 — dividir a linha pivô: `nova L1 = L1 ÷ 4/3`
-
-- x1: 4/3 ÷ 4/3 = 4/3 × 3/4 = 1
-- xf1: 1 ÷ 4/3 = 1 × 3/4 = 3/4
-- xf2: -1/3 ÷ 4/3 = -1/3 × 3/4 = -1/4
-- bn: 3 ÷ 4/3 = 3 × 3/4 = 9/4
-
-**Quadro 4** (só a linha pivô dividida; as outras copiadas)
-
-| Linha | Z | x1 | x2 | xf1 | xf2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | -1/3 | 0 | 0 | 4/3 | 12 |
-| L1 | 0 | 1 | 0 | 3/4 | -1/4 | 9/4 |
-| L2 | 0 | 2/3 | 1 | 0 | 1/3 | 3 |
-
-Multiplicadores (no papel: setas saindo da nova L1, com o número circulado e "+"): LZ: × 1/3 · L2: × (-2/3)
-
-Passo 2 — zerar a coluna x1 nas outras linhas (só aparecem os elementos que mudam):
-
-- nova LZ = LZ + 1/3 × (nova L1)
-  - xf1: 0 + 1/3 × 3/4 = 1/4
-  - xf2: 4/3 + 1/3 × (-1/4) = 4/3 - 1/12 = (16 - 1)/12 = 5/4
-  - bn: 12 + 1/3 × 9/4 = 12 + 3/4 = (48 + 3)/4 = 51/4
-- nova L2 = L2 + (-2/3) × (nova L1)
-  - xf1: 0 + (-2/3) × 3/4 = -1/2
-  - xf2: 1/3 + (-2/3) × (-1/4) = 1/3 + 1/6 = (2 + 1)/6 = 1/2
-  - bn: 3 + (-2/3) × 9/4 = 3 - 3/2 = (6 - 3)/2 = 3/2
-
-**Quadro 5**
+**Quadro 3**
 
 | Linha | Z | x1 | x2 | xf1 | xf2 | bn |
 |:--|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -309,24 +251,13 @@ Passo 2 — zerar a coluna x1 nas outras linhas (só aparecem os elementos que m
 
 A LZ não tem nenhum número negativo → **solução ótima**.
 
-#### 4. Leitura do quadro final
-
-- Básicas: x1 = 9/4 (L1); x2 = 3/2 (L2)
-- Não básicas (valem 0): xf1, xf2
-- A LZ diz Z = 51/4.
-
-#### 5. Resposta
+#### 4. Resposta
 
 ```
-Z = 3x1 + 4x2 = 3 × 9/4 + 4 × 3/2 = 27/4 + 6 = (27 + 24)/4 = 51/4
+Z = 3x1 + 4x2 = 3 × 9/4 + 4 × 3/2 = 51/4
 ```
 
-> **RESPOSTA:** x1 = 9/4 = 2,25; x2 = 3/2 = 1,5; **Z = 51/4 = 12,75**
-
-#### 6. Conferência
-
-- 2 × 9/4 + 1 × 3/2 = 9/2 + 3/2 = (9 + 3)/2 = 6 ≤ 6 ✓ (folga 0)
-- 2 × 9/4 + 3 × 3/2 = 9/2 + 9/2 = (9 + 9)/2 = 9 ≤ 9 ✓ (folga 0)
+**Resposta:** x1 = 9/4 = 2,25; x2 = 3/2 = 1,5; Z = 51/4 = 12,75
 
 ### 3.2 Duas fases: atividade 1 (dual de Max Z = 3x1 + 2x2)
 
@@ -391,53 +322,11 @@ W = a1 + a2 = 5 - 0,8y1 - 0,3y2 - 0,9y3 + yf1 + yf2
 | LW | 0 | -4/5 | -3/10 | -9/10 | 1 | 1 | 0 | 0 | -5 |
 
 - Coluna pivô: **y3** (o mais negativo da LW: -9/10)
-- Razões (bn ÷ elemento positivo da coluna y3):
-  - L1: 3 ÷ 2/5 = 3 × 5/2 = 15/2 = 7,5
-  - L2: 2 ÷ 1/2 = 2 × 2 = 4 ← menor
+- Razões: L1: 3 ÷ 2/5 = 15/2 = 7,5 · L2: 2 ÷ 1/2 = 4 ← menor
 - Linha pivô: **L2** · Pivô: **1/2**
+- Operações: L2 ÷ 1/2; LZ - 3 × L2; L1 - 2/5 × L2; LW + 9/10 × L2
 
-Passo 1 — dividir a linha pivô: `nova L2 = L2 ÷ 1/2`
-
-- y1: 3/10 ÷ 1/2 = 3/10 × 2 = 3/5
-- y2: 1/5 ÷ 1/2 = 1/5 × 2 = 2/5
-- y3: 1/2 ÷ 1/2 = 1/2 × 2 = 1
-- yf2: -1 ÷ 1/2 = -1 × 2 = -2
-- a2: 1 ÷ 1/2 = 1 × 2 = 2
-- bn: 2 ÷ 1/2 = 2 × 2 = 4
-
-**Quadro 2** (só a linha pivô dividida; as outras copiadas)
-
-| Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | a1 | a2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | -1 | 3 | 1 | 3 | 0 | 0 | 0 | 0 | 0 |
-| L1 | 0 | 1/2 | 1/10 | 2/5 | -1 | 0 | 1 | 0 | 3 |
-| L2 | 0 | 3/5 | 2/5 | 1 | 0 | -2 | 0 | 2 | 4 |
-| LW | 0 | -4/5 | -3/10 | -9/10 | 1 | 1 | 0 | 0 | -5 |
-
-Multiplicadores (no papel: setas saindo da nova L2, com o número circulado e "+"): LZ: × (-3) · L1: × (-2/5) · LW: × 9/10
-
-Passo 2 — zerar a coluna y3 nas outras linhas (só aparecem os elementos que mudam):
-
-- nova LZ = LZ + (-3) × (nova L2)
-  - y1: 3 + (-3) × 3/5 = 3 - 9/5 = (15 - 9)/5 = 6/5
-  - y2: 1 + (-3) × 2/5 = 1 - 6/5 = (5 - 6)/5 = -1/5
-  - yf2: 0 + (-3) × (-2) = 6
-  - a2: 0 + (-3) × 2 = -6
-  - bn: 0 + (-3) × 4 = -12
-- nova L1 = L1 + (-2/5) × (nova L2)
-  - y1: 1/2 + (-2/5) × 3/5 = 1/2 - 6/25 = (25 - 12)/50 = 13/50
-  - y2: 1/10 + (-2/5) × 2/5 = 1/10 - 4/25 = (5 - 8)/50 = -3/50
-  - yf2: 0 + (-2/5) × (-2) = 4/5
-  - a2: 0 + (-2/5) × 2 = -4/5
-  - bn: 3 + (-2/5) × 4 = 3 - 8/5 = (15 - 8)/5 = 7/5
-- nova LW = LW + 9/10 × (nova L2)
-  - y1: -4/5 + 9/10 × 3/5 = -4/5 + 27/50 = (-40 + 27)/50 = -13/50
-  - y2: -3/10 + 9/10 × 2/5 = -3/10 + 9/25 = (-15 + 18)/50 = 3/50
-  - yf2: 1 + 9/10 × (-2) = 1 - 9/5 = (5 - 9)/5 = -4/5
-  - a2: 0 + 9/10 × 2 = 9/5
-  - bn: -5 + 9/10 × 4 = -5 + 18/5 = (-25 + 18)/5 = -7/5
-
-**Quadro 3**
+**Quadro 2**
 
 | Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | a1 | a2 | bn |
 |:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -447,57 +336,11 @@ Passo 2 — zerar a coluna y3 nas outras linhas (só aparecem os elementos que m
 | LW | 0 | -13/50 | 3/50 | 0 | 1 | -4/5 | 0 | 9/5 | -7/5 |
 
 - Coluna pivô: **yf2** (o mais negativo da LW: -4/5)
-- Razões (bn ÷ elemento positivo da coluna yf2):
-  - L1: 7/5 ÷ 4/5 = 7/5 × 5/4 = 7/4 = 1,75 ← menor
-  - L2: o elemento -2 é negativo → não entra
+- Razões: L1: 7/5 ÷ 4/5 = 7/4 = 1,75 ← menor · L2: não entra (-2)
 - Linha pivô: **L1** · Pivô: **4/5**
+- Operações: L1 ÷ 4/5; LZ - 6 × L1; L2 + 2 × L1; LW + 4/5 × L1
 
-Passo 1 — dividir a linha pivô: `nova L1 = L1 ÷ 4/5`
-
-- y1: 13/50 ÷ 4/5 = 13/50 × 5/4 = 13/40
-- y2: -3/50 ÷ 4/5 = -3/50 × 5/4 = -3/40
-- yf1: -1 ÷ 4/5 = -1 × 5/4 = -5/4
-- yf2: 4/5 ÷ 4/5 = 4/5 × 5/4 = 1
-- a1: 1 ÷ 4/5 = 1 × 5/4 = 5/4
-- a2: -4/5 ÷ 4/5 = -4/5 × 5/4 = -1
-- bn: 7/5 ÷ 4/5 = 7/5 × 5/4 = 7/4
-
-**Quadro 4** (só a linha pivô dividida; as outras copiadas)
-
-| Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | a1 | a2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | -1 | 6/5 | -1/5 | 0 | 0 | 6 | 0 | -6 | -12 |
-| L1 | 0 | 13/40 | -3/40 | 0 | -5/4 | 1 | 5/4 | -1 | 7/4 |
-| L2 | 0 | 3/5 | 2/5 | 1 | 0 | -2 | 0 | 2 | 4 |
-| LW | 0 | -13/50 | 3/50 | 0 | 1 | -4/5 | 0 | 9/5 | -7/5 |
-
-Multiplicadores (no papel: setas saindo da nova L1, com o número circulado e "+"): LZ: × (-6) · L2: × 2 · LW: × 4/5
-
-Passo 2 — zerar a coluna yf2 nas outras linhas (só aparecem os elementos que mudam):
-
-- nova LZ = LZ + (-6) × (nova L1)
-  - y1: 6/5 + (-6) × 13/40 = 6/5 - 39/20 = (24 - 39)/20 = -3/4
-  - y2: -1/5 + (-6) × (-3/40) = -1/5 + 9/20 = (-4 + 9)/20 = 1/4
-  - yf1: 0 + (-6) × (-5/4) = 15/2
-  - a1: 0 + (-6) × 5/4 = -15/2
-  - a2: -6 + (-6) × (-1) = -6 + 6 = 0
-  - bn: -12 + (-6) × 7/4 = -12 - 21/2 = (-24 - 21)/2 = -45/2
-- nova L2 = L2 + 2 × (nova L1)
-  - y1: 3/5 + 2 × 13/40 = 3/5 + 13/20 = (12 + 13)/20 = 5/4
-  - y2: 2/5 + 2 × (-3/40) = 2/5 - 3/20 = (8 - 3)/20 = 1/4
-  - yf1: 0 + 2 × (-5/4) = -5/2
-  - a1: 0 + 2 × 5/4 = 5/2
-  - a2: 2 + 2 × (-1) = 2 - 2 = 0
-  - bn: 4 + 2 × 7/4 = 4 + 7/2 = (8 + 7)/2 = 15/2
-- nova LW = LW + 4/5 × (nova L1)
-  - y1: -13/50 + 4/5 × 13/40 = -13/50 + 13/50 = (-13 + 13)/50 = 0
-  - y2: 3/50 + 4/5 × (-3/40) = 3/50 - 3/50 = (3 - 3)/50 = 0
-  - yf1: 1 + 4/5 × (-5/4) = 1 - 1 = 0
-  - a1: 0 + 4/5 × 5/4 = 1
-  - a2: 9/5 + 4/5 × (-1) = 9/5 - 4/5 = (9 - 4)/5 = 1
-  - bn: -7/5 + 4/5 × 7/4 = -7/5 + 7/5 = (-7 + 7)/5 = 0
-
-**Quadro 5**
+**Quadro 3**
 
 | Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | a1 | a2 | bn |
 |:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -510,7 +353,7 @@ A LW não tem negativo fora das colunas artificiais e o bn da LW é 0 → W = 0 
 
 **Fase 2** — retiramos a linha LW e as colunas a1, a2; segue com a LZ.
 
-**Quadro 6**
+**Quadro 4**
 
 | Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | bn |
 |:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -519,43 +362,11 @@ A LW não tem negativo fora das colunas artificiais e o bn da LW é 0 → W = 0 
 | L2 | 0 | 5/4 | 1/4 | 1 | -5/2 | 0 | 15/2 |
 
 - Coluna pivô: **y1** (o mais negativo da LZ: -3/4)
-- Razões (bn ÷ elemento positivo da coluna y1):
-  - L1: 7/4 ÷ 13/40 = 7/4 × 40/13 = 70/13 ≈ 5,38 ← menor
-  - L2: 15/2 ÷ 5/4 = 15/2 × 4/5 = 6
+- Razões: L1: 7/4 ÷ 13/40 = 70/13 ≈ 5,38 ← menor · L2: 15/2 ÷ 5/4 = 6
 - Linha pivô: **L1** · Pivô: **13/40**
+- Operações: L1 ÷ 13/40; LZ + 3/4 × L1; L2 - 5/4 × L1
 
-Passo 1 — dividir a linha pivô: `nova L1 = L1 ÷ 13/40`
-
-- y1: 13/40 ÷ 13/40 = 13/40 × 40/13 = 1
-- y2: -3/40 ÷ 13/40 = -3/40 × 40/13 = -3/13
-- yf1: -5/4 ÷ 13/40 = -5/4 × 40/13 = -50/13
-- yf2: 1 ÷ 13/40 = 1 × 40/13 = 40/13
-- bn: 7/4 ÷ 13/40 = 7/4 × 40/13 = 70/13
-
-**Quadro 7** (só a linha pivô dividida; as outras copiadas)
-
-| Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | -1 | -3/4 | 1/4 | 0 | 15/2 | 0 | -45/2 |
-| L1 | 0 | 1 | -3/13 | 0 | -50/13 | 40/13 | 70/13 |
-| L2 | 0 | 5/4 | 1/4 | 1 | -5/2 | 0 | 15/2 |
-
-Multiplicadores (no papel: setas saindo da nova L1, com o número circulado e "+"): LZ: × 3/4 · L2: × (-5/4)
-
-Passo 2 — zerar a coluna y1 nas outras linhas (só aparecem os elementos que mudam):
-
-- nova LZ = LZ + 3/4 × (nova L1)
-  - y2: 1/4 + 3/4 × (-3/13) = 1/4 - 9/52 = (13 - 9)/52 = 1/13
-  - yf1: 15/2 + 3/4 × (-50/13) = 15/2 - 75/26 = (195 - 75)/26 = 60/13
-  - yf2: 0 + 3/4 × 40/13 = 30/13
-  - bn: -45/2 + 3/4 × 70/13 = -45/2 + 105/26 = (-585 + 105)/26 = -240/13
-- nova L2 = L2 + (-5/4) × (nova L1)
-  - y2: 1/4 + (-5/4) × (-3/13) = 1/4 + 15/52 = (13 + 15)/52 = 7/13
-  - yf1: -5/2 + (-5/4) × (-50/13) = -5/2 + 125/26 = (-65 + 125)/26 = 30/13
-  - yf2: 0 + (-5/4) × 40/13 = -50/13
-  - bn: 15/2 + (-5/4) × 70/13 = 15/2 - 175/26 = (195 - 175)/26 = 10/13
-
-**Quadro 8**
+**Quadro 5**
 
 | Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | bn |
 |:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -565,45 +376,19 @@ Passo 2 — zerar a coluna y1 nas outras linhas (só aparecem os elementos que m
 
 A LZ não tem nenhum número negativo → **solução ótima**.
 
-#### 4. Leitura do quadro final
+A LZ diz -Z1 = -240/13, logo Z1 = 240/13.
 
-- Básicas: y1 = 70/13 (L1); y3 = 10/13 (L2)
-- Não básicas (valem 0): y2, yf1, yf2
-- A LZ diz -Z1 = -240/13, logo Z1 = 240/13.
+#### 4. Resposta
 
-```
-Z1 = 3y1 + y2 + 3y3 = 3 × 70/13 + 1 × 0 + 3 × 10/13 = 210/13 + 0 + 30/13 = (210 + 0 + 30)/13 = 240/13
-```
-
-#### 5. Solução do primal (lida na LZ final do dual)
-
-- coluna yf1 → x1 = 60/13
-- coluna yf2 → x2 = 30/13
+Primal lido na LZ final do dual: coluna yf1 → x1 = 60/13 · coluna yf2 → x2 = 30/13
 
 ```
-Z = 3x1 + 2x2 = 3 × 60/13 + 2 × 30/13 = 180/13 + 60/13 = (180 + 60)/13 = 240/13
+Z = 3x1 + 2x2 = 3 × 60/13 + 2 × 30/13 = 240/13
 ```
 
-#### 6. Resposta
+**Resposta:** x1 = 60/13 ≈ 4,62; x2 = 30/13 ≈ 2,31; Z = 240/13 ≈ 18,46
 
-> **RESPOSTA:** x1 = 60/13 ≈ 4,62; x2 = 30/13 ≈ 2,31; **Z = 240/13 ≈ 18,46**
->
-> **Dual:** y1 = 70/13 ≈ 5,38; y2 = 0; y3 = 10/13 ≈ 0,77; **Z1 = 240/13 ≈ 18,46**
-
-#### 7. Conferência
-
-Primal:
-
-- 0,5 × 60/13 + 0,3 × 30/13 = 30/13 + 9/13 = (30 + 9)/13 = 3 ≤ 3 ✓ (folga 0)
-- 0,1 × 60/13 + 0,2 × 30/13 = 6/13 + 6/13 = (6 + 6)/13 = 12/13 ≤ 1 ✓ (folga 1/13)
-- 0,4 × 60/13 + 0,5 × 30/13 = 24/13 + 15/13 = (24 + 15)/13 = 3 ≤ 3 ✓ (folga 0)
-
-Dual:
-
-- 0,5 × 70/13 + 0,1 × 0 + 0,4 × 10/13 = 35/13 + 0 + 4/13 = (35 + 0 + 4)/13 = 3 ≥ 3 ✓ (excesso 0)
-- 0,3 × 70/13 + 0,2 × 0 + 0,5 × 10/13 = 21/13 + 0 + 5/13 = (21 + 0 + 5)/13 = 2 ≥ 2 ✓ (excesso 0)
-
-- Z = Z1 = 240/13 ✓
+**Dual:** y1 = 70/13 ≈ 5,38; y2 = 0; y3 = 10/13 ≈ 0,77; Z1 = 240/13 ≈ 18,46
 
 O que a foto da atividade 1 tem de diferente:
 
@@ -664,54 +449,11 @@ y1 + 5y2 + 3y3 + 4y4 + yf3 = 1
 | L3 | 0 | 1 | 5 | 3 | **[4]** | 0 | 0 | 1 | 1 |
 
 - Coluna pivô: **y4** (o mais negativo da LZ: -50)
-- Razões (bn ÷ elemento positivo da coluna y4):
-  - L1: 5 ÷ 1 = 5
-  - L2: 2 ÷ 2 = 1
-  - L3: 1 ÷ 4 = 1/4 = 0,25 ← menor
+- Razões: L1: 5 ÷ 1 = 5 · L2: 2 ÷ 2 = 1 · L3: 1 ÷ 4 = 1/4 = 0,25 ← menor
 - Linha pivô: **L3** · Pivô: **4**
+- Operações: L3 ÷ 4; LZ + 50 × L3; L1 - 1 × L3; L2 - 2 × L3
 
-Passo 1 — dividir a linha pivô: `nova L3 = L3 ÷ 4`
-
-- y1: 1 ÷ 4 = 1/4
-- y2: 5 ÷ 4 = 5/4
-- y3: 3 ÷ 4 = 3/4
-- y4: 4 ÷ 4 = 1
-- yf3: 1 ÷ 4 = 1/4
-- bn: 1 ÷ 4 = 1/4
-
-**Quadro 2** (só a linha pivô dividida; as outras copiadas)
-
-| Linha | Z1 | y1 | y2 | y3 | y4 | yf1 | yf2 | yf3 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | -20 | -30 | -40 | -50 | 0 | 0 | 0 | 0 |
-| L1 | 0 | 2 | 6 | 7 | 1 | 1 | 0 | 0 | 5 |
-| L2 | 0 | 3 | 8 | 1 | 2 | 0 | 1 | 0 | 2 |
-| L3 | 0 | 1/4 | 5/4 | 3/4 | 1 | 0 | 0 | 1/4 | 1/4 |
-
-Multiplicadores (no papel: setas saindo da nova L3, com o número circulado e "+"): LZ: × 50 · L1: × (-1) · L2: × (-2)
-
-Passo 2 — zerar a coluna y4 nas outras linhas (só aparecem os elementos que mudam):
-
-- nova LZ = LZ + 50 × (nova L3)
-  - y1: -20 + 50 × 1/4 = -20 + 25/2 = (-40 + 25)/2 = -15/2
-  - y2: -30 + 50 × 5/4 = -30 + 125/2 = (-60 + 125)/2 = 65/2
-  - y3: -40 + 50 × 3/4 = -40 + 75/2 = (-80 + 75)/2 = -5/2
-  - yf3: 0 + 50 × 1/4 = 25/2
-  - bn: 0 + 50 × 1/4 = 25/2
-- nova L1 = L1 + (-1) × (nova L3)
-  - y1: 2 + (-1) × 1/4 = 2 - 1/4 = (8 - 1)/4 = 7/4
-  - y2: 6 + (-1) × 5/4 = 6 - 5/4 = (24 - 5)/4 = 19/4
-  - y3: 7 + (-1) × 3/4 = 7 - 3/4 = (28 - 3)/4 = 25/4
-  - yf3: 0 + (-1) × 1/4 = -1/4
-  - bn: 5 + (-1) × 1/4 = 5 - 1/4 = (20 - 1)/4 = 19/4
-- nova L2 = L2 + (-2) × (nova L3)
-  - y1: 3 + (-2) × 1/4 = 3 - 1/2 = (6 - 1)/2 = 5/2
-  - y2: 8 + (-2) × 5/4 = 8 - 5/2 = (16 - 5)/2 = 11/2
-  - y3: 1 + (-2) × 3/4 = 1 - 3/2 = (2 - 3)/2 = -1/2
-  - yf3: 0 + (-2) × 1/4 = -1/2
-  - bn: 2 + (-2) × 1/4 = 2 - 1/2 = (4 - 1)/2 = 3/2
-
-**Quadro 3**
+**Quadro 2**
 
 | Linha | Z1 | y1 | y2 | y3 | y4 | yf1 | yf2 | yf3 | bn |
 |:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -721,54 +463,11 @@ Passo 2 — zerar a coluna y4 nas outras linhas (só aparecem os elementos que m
 | L3 | 0 | 1/4 | 5/4 | 3/4 | 1 | 0 | 0 | 1/4 | 1/4 |
 
 - Coluna pivô: **y1** (o mais negativo da LZ: -15/2)
-- Razões (bn ÷ elemento positivo da coluna y1):
-  - L1: 19/4 ÷ 7/4 = 19/4 × 4/7 = 19/7 ≈ 2,71
-  - L2: 3/2 ÷ 5/2 = 3/2 × 2/5 = 3/5 = 0,6 ← menor
-  - L3: 1/4 ÷ 1/4 = 1/4 × 4 = 1
+- Razões: L1: 19/4 ÷ 7/4 = 19/7 ≈ 2,71 · L2: 3/2 ÷ 5/2 = 3/5 = 0,6 ← menor · L3: 1/4 ÷ 1/4 = 1
 - Linha pivô: **L2** · Pivô: **5/2**
+- Operações: L2 ÷ 5/2; LZ + 15/2 × L2; L1 - 7/4 × L2; L3 - 1/4 × L2
 
-Passo 1 — dividir a linha pivô: `nova L2 = L2 ÷ 5/2`
-
-- y1: 5/2 ÷ 5/2 = 5/2 × 2/5 = 1
-- y2: 11/2 ÷ 5/2 = 11/2 × 2/5 = 11/5
-- y3: -1/2 ÷ 5/2 = -1/2 × 2/5 = -1/5
-- yf2: 1 ÷ 5/2 = 1 × 2/5 = 2/5
-- yf3: -1/2 ÷ 5/2 = -1/2 × 2/5 = -1/5
-- bn: 3/2 ÷ 5/2 = 3/2 × 2/5 = 3/5
-
-**Quadro 4** (só a linha pivô dividida; as outras copiadas)
-
-| Linha | Z1 | y1 | y2 | y3 | y4 | yf1 | yf2 | yf3 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | -15/2 | 65/2 | -5/2 | 0 | 0 | 0 | 25/2 | 25/2 |
-| L1 | 0 | 7/4 | 19/4 | 25/4 | 0 | 1 | 0 | -1/4 | 19/4 |
-| L2 | 0 | 1 | 11/5 | -1/5 | 0 | 0 | 2/5 | -1/5 | 3/5 |
-| L3 | 0 | 1/4 | 5/4 | 3/4 | 1 | 0 | 0 | 1/4 | 1/4 |
-
-Multiplicadores (no papel: setas saindo da nova L2, com o número circulado e "+"): LZ: × 15/2 · L1: × (-7/4) · L3: × (-1/4)
-
-Passo 2 — zerar a coluna y1 nas outras linhas (só aparecem os elementos que mudam):
-
-- nova LZ = LZ + 15/2 × (nova L2)
-  - y2: 65/2 + 15/2 × 11/5 = 65/2 + 33/2 = (65 + 33)/2 = 49
-  - y3: -5/2 + 15/2 × (-1/5) = -5/2 - 3/2 = (-5 - 3)/2 = -4
-  - yf2: 0 + 15/2 × 2/5 = 3
-  - yf3: 25/2 + 15/2 × (-1/5) = 25/2 - 3/2 = (25 - 3)/2 = 11
-  - bn: 25/2 + 15/2 × 3/5 = 25/2 + 9/2 = (25 + 9)/2 = 17
-- nova L1 = L1 + (-7/4) × (nova L2)
-  - y2: 19/4 + (-7/4) × 11/5 = 19/4 - 77/20 = (95 - 77)/20 = 9/10
-  - y3: 25/4 + (-7/4) × (-1/5) = 25/4 + 7/20 = (125 + 7)/20 = 33/5
-  - yf2: 0 + (-7/4) × 2/5 = -7/10
-  - yf3: -1/4 + (-7/4) × (-1/5) = -1/4 + 7/20 = (-5 + 7)/20 = 1/10
-  - bn: 19/4 + (-7/4) × 3/5 = 19/4 - 21/20 = (95 - 21)/20 = 37/10
-- nova L3 = L3 + (-1/4) × (nova L2)
-  - y2: 5/4 + (-1/4) × 11/5 = 5/4 - 11/20 = (25 - 11)/20 = 7/10
-  - y3: 3/4 + (-1/4) × (-1/5) = 3/4 + 1/20 = (15 + 1)/20 = 4/5
-  - yf2: 0 + (-1/4) × 2/5 = -1/10
-  - yf3: 1/4 + (-1/4) × (-1/5) = 1/4 + 1/20 = (5 + 1)/20 = 3/10
-  - bn: 1/4 + (-1/4) × 3/5 = 1/4 - 3/20 = (5 - 3)/20 = 1/10
-
-**Quadro 5**
+**Quadro 3**
 
 | Linha | Z1 | y1 | y2 | y3 | y4 | yf1 | yf2 | yf3 | bn |
 |:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -778,54 +477,11 @@ Passo 2 — zerar a coluna y1 nas outras linhas (só aparecem os elementos que m
 | L3 | 0 | 0 | 7/10 | **[4/5]** | 1 | 0 | -1/10 | 3/10 | 1/10 |
 
 - Coluna pivô: **y3** (o mais negativo da LZ: -4)
-- Razões (bn ÷ elemento positivo da coluna y3):
-  - L1: 37/10 ÷ 33/5 = 37/10 × 5/33 = 37/66 ≈ 0,56
-  - L2: o elemento -1/5 é negativo → não entra
-  - L3: 1/10 ÷ 4/5 = 1/10 × 5/4 = 1/8 = 0,125 ← menor
+- Razões: L1: 37/10 ÷ 33/5 = 37/66 ≈ 0,56 · L2: não entra (-1/5) · L3: 1/10 ÷ 4/5 = 1/8 = 0,125 ← menor
 - Linha pivô: **L3** · Pivô: **4/5**
+- Operações: L3 ÷ 4/5; LZ + 4 × L3; L1 - 33/5 × L3; L2 + 1/5 × L3
 
-Passo 1 — dividir a linha pivô: `nova L3 = L3 ÷ 4/5`
-
-- y2: 7/10 ÷ 4/5 = 7/10 × 5/4 = 7/8
-- y3: 4/5 ÷ 4/5 = 4/5 × 5/4 = 1
-- y4: 1 ÷ 4/5 = 1 × 5/4 = 5/4
-- yf2: -1/10 ÷ 4/5 = -1/10 × 5/4 = -1/8
-- yf3: 3/10 ÷ 4/5 = 3/10 × 5/4 = 3/8
-- bn: 1/10 ÷ 4/5 = 1/10 × 5/4 = 1/8
-
-**Quadro 6** (só a linha pivô dividida; as outras copiadas)
-
-| Linha | Z1 | y1 | y2 | y3 | y4 | yf1 | yf2 | yf3 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | 0 | 49 | -4 | 0 | 0 | 3 | 11 | 17 |
-| L1 | 0 | 0 | 9/10 | 33/5 | 0 | 1 | -7/10 | 1/10 | 37/10 |
-| L2 | 0 | 1 | 11/5 | -1/5 | 0 | 0 | 2/5 | -1/5 | 3/5 |
-| L3 | 0 | 0 | 7/8 | 1 | 5/4 | 0 | -1/8 | 3/8 | 1/8 |
-
-Multiplicadores (no papel: setas saindo da nova L3, com o número circulado e "+"): LZ: × 4 · L1: × (-33/5) · L2: × 1/5
-
-Passo 2 — zerar a coluna y3 nas outras linhas (só aparecem os elementos que mudam):
-
-- nova LZ = LZ + 4 × (nova L3)
-  - y2: 49 + 4 × 7/8 = 49 + 7/2 = (98 + 7)/2 = 105/2
-  - y4: 0 + 4 × 5/4 = 5
-  - yf2: 3 + 4 × (-1/8) = 3 - 1/2 = (6 - 1)/2 = 5/2
-  - yf3: 11 + 4 × 3/8 = 11 + 3/2 = (22 + 3)/2 = 25/2
-  - bn: 17 + 4 × 1/8 = 17 + 1/2 = (34 + 1)/2 = 35/2
-- nova L1 = L1 + (-33/5) × (nova L3)
-  - y2: 9/10 + (-33/5) × 7/8 = 9/10 - 231/40 = (36 - 231)/40 = -39/8
-  - y4: 0 + (-33/5) × 5/4 = -33/4
-  - yf2: -7/10 + (-33/5) × (-1/8) = -7/10 + 33/40 = (-28 + 33)/40 = 1/8
-  - yf3: 1/10 + (-33/5) × 3/8 = 1/10 - 99/40 = (4 - 99)/40 = -19/8
-  - bn: 37/10 + (-33/5) × 1/8 = 37/10 - 33/40 = (148 - 33)/40 = 23/8
-- nova L2 = L2 + 1/5 × (nova L3)
-  - y2: 11/5 + 1/5 × 7/8 = 11/5 + 7/40 = (88 + 7)/40 = 19/8
-  - y4: 0 + 1/5 × 5/4 = 1/4
-  - yf2: 2/5 + 1/5 × (-1/8) = 2/5 - 1/40 = (16 - 1)/40 = 3/8
-  - yf3: -1/5 + 1/5 × 3/8 = -1/5 + 3/40 = (-8 + 3)/40 = -1/8
-  - bn: 3/5 + 1/5 × 1/8 = 3/5 + 1/40 = (24 + 1)/40 = 5/8
-
-**Quadro 7**
+**Quadro 4**
 
 | Linha | Z1 | y1 | y2 | y3 | y4 | yf1 | yf2 | yf3 | bn |
 |:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -836,48 +492,17 @@ Passo 2 — zerar a coluna y3 nas outras linhas (só aparecem os elementos que m
 
 A LZ não tem nenhum número negativo → **solução ótima**.
 
-#### 4. Leitura do quadro final
+#### 4. Resposta
 
-- Básicas: yf1 = 23/8 (L1); y1 = 5/8 (L2); y3 = 1/8 (L3)
-- Não básicas (valem 0): y2, y4, yf2, yf3
-- A LZ diz Z1 = 35/2.
+Primal lido na LZ final do dual: coluna yf1 → x1 = 0 · coluna yf2 → x2 = 5/2 · coluna yf3 → x3 = 25/2
 
 ```
-Z1 = 20y1 + 30y2 + 40y3 + 50y4 = 20 × 5/8 + 30 × 0 + 40 × 1/8 + 50 × 0 = 25/2 + 0 + 5 + 0 = (25 + 0 + 10 + 0)/2 = 35/2
+Z = 5x1 + 2x2 + x3 = 5 × 0 + 2 × 5/2 + 1 × 25/2 = 35/2
 ```
 
-#### 5. Solução do primal (lida na LZ final do dual)
+**Resposta:** x1 = 0; x2 = 5/2 = 2,5; x3 = 25/2 = 12,5; Z = 35/2 = 17,5
 
-- coluna yf1 → x1 = 0
-- coluna yf2 → x2 = 5/2
-- coluna yf3 → x3 = 25/2
-
-```
-Z = 5x1 + 2x2 + x3 = 5 × 0 + 2 × 5/2 + 1 × 25/2 = 0 + 5 + 25/2 = (0 + 10 + 25)/2 = 35/2
-```
-
-#### 6. Resposta
-
-> **RESPOSTA:** x1 = 0; x2 = 5/2 = 2,5; x3 = 25/2 = 12,5; **Z = 35/2 = 17,5**
->
-> **Dual:** y1 = 5/8 = 0,625; y2 = 0; y3 = 1/8 = 0,125; y4 = 0; **Z1 = 35/2 = 17,5**
-
-#### 7. Conferência
-
-Primal:
-
-- 2 × 0 + 3 × 5/2 + 1 × 25/2 = 0 + 15/2 + 25/2 = (0 + 15 + 25)/2 = 20 ≥ 20 ✓ (excesso 0)
-- 6 × 0 + 8 × 5/2 + 5 × 25/2 = 0 + 20 + 125/2 = (0 + 40 + 125)/2 = 165/2 ≥ 30 ✓ (excesso 105/2)
-- 7 × 0 + 1 × 5/2 + 3 × 25/2 = 0 + 5/2 + 75/2 = (0 + 5 + 75)/2 = 40 ≥ 40 ✓ (excesso 0)
-- 1 × 0 + 2 × 5/2 + 4 × 25/2 = 0 + 5 + 50 = 55 ≥ 50 ✓ (excesso 5)
-
-Dual:
-
-- 2 × 5/8 + 6 × 0 + 7 × 1/8 + 1 × 0 = 5/4 + 0 + 7/8 + 0 = (10 + 0 + 7 + 0)/8 = 17/8 ≤ 5 ✓ (folga 23/8)
-- 3 × 5/8 + 8 × 0 + 1 × 1/8 + 2 × 0 = 15/8 + 0 + 1/8 + 0 = (15 + 0 + 1 + 0)/8 = 2 ≤ 2 ✓ (folga 0)
-- 1 × 5/8 + 5 × 0 + 3 × 1/8 + 4 × 0 = 5/8 + 0 + 3/8 + 0 = (5 + 0 + 3 + 0)/8 = 1 ≤ 1 ✓ (folga 0)
-
-- Z = Z1 = 35/2 ✓
+**Dual:** y1 = 5/8 = 0,625; y2 = 0; y3 = 1/8 = 0,125; y4 = 0; Z1 = 35/2 = 17,5
 
 O que as fotos da atividade 2 têm de diferente:
 
@@ -900,7 +525,7 @@ x1, x2 >= 0
 resolver: primal
 ```
 
-> **RESPOSTA:** x1 = 9/2 = 4,5; x2 = 3/2 = 1,5; **Z = 27/2 = 13,5**
+**Resposta:** x1 = 9/2 = 4,5; x2 = 3/2 = 1,5; Z = 27/2 = 13,5
 
 O caderno parou no 5º quadro, que ainda tem um negativo na linha Z (coluna xf2; ele escreveu -0,9 e o certo é -3/5). A resposta dele, Z = 10,2 (x1 = 1,2; x2 = 2,6), é um vértice da região, mas não o ótimo. O próprio método gráfico do caderno (p07) dá Z = 13,5.
 
@@ -915,7 +540,7 @@ x1, x2, x3 >= 0
 resolver: primal
 ```
 
-> **RESPOSTA:** x1 = 30; x2 = 0; x3 = 0; **Z = 60**
+**Resposta:** x1 = 30; x2 = 0; x3 = 0; Z = 60
 
 Observação: x2 é não básica e tem 0 na LZ → há outras soluções ótimas com o mesmo Z.
 
@@ -932,7 +557,7 @@ x1, x2 >= 0
 resolver: primal
 ```
 
-> **RESPOSTA:** x1 = 500/21 ≈ 23,81; x2 = 225/7 ≈ 32,14; **Z = 1775/3 ≈ 591,67**
+**Resposta:** x1 = 500/21 ≈ 23,81; x2 = 225/7 ≈ 32,14; Z = 1775/3 ≈ 591,67
 
 O último quadro do caderno (p15) não foi calculado: as restrições foram copiadas do quadro anterior e a linha Z ficou com bn = -2200/7. A 2ª restrição é ≤: na foto da p13 o sinal está mal escrito, e a resolução do caderno na p14 usa folga nessa restrição.
 
@@ -947,7 +572,7 @@ x1, x2, x3 >= 0
 resolver: primal
 ```
 
-> **RESPOSTA:** x1 = 0; x2 = 15/2 = 7,5; x3 = 0; **Z = 75**
+**Resposta:** x1 = 0; x2 = 15/2 = 7,5; x3 = 0; Z = 75
 
 A resposta do caderno está certa, mas a última linha do quadro final está com sinais errados (x3 = -1/2, xf3 = 0 e bn = -5/2; o certo é 1/2, 1 e 5/2). Um bn negativo numa linha de restrição é sempre sinal de erro.
 

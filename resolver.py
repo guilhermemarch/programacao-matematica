@@ -2,15 +2,15 @@
 
 Uso: python3 resolver.py questoes/q1.txt
 
-O formato do arquivo da questão está no prompt.md. A saída é a resolução completa em
-Markdown, no formato do caderno: quadros, razões, contas, resposta e conferência.
+O formato do arquivo da questão está no prompt.md. A saída é a resolução enxuta em
+Markdown, só o que se copia: modelo, forma padrão, um quadro por iteração (com pivô,
+razões e operações) e resposta. As contas e a conferência são feitas por dentro.
 Quando o caso não é coberto, o resolver para com uma mensagem de erro (código 1).
 """
 import re
 import sys
 from dataclasses import dataclass, field
 from fractions import Fraction
-from math import lcm
 
 MODOS = ("primal", "dual", "ambos", "montar_dual")
 MAX_PIVOS = 50
@@ -74,42 +74,6 @@ def num(x, usa_decimal):
     return fr(x)
 
 
-def conta_div(a, p):
-    """'3 ÷ 4/3 = 3 × 3/4 = 9/4'."""
-    a, p = Fraction(a), Fraction(p)
-    if p.denominator == 1:
-        return f"{fr(a)} ÷ {fp(p)} = {fr(a / p)}"
-    return f"{fr(a)} ÷ {fp(p)} = {fr(a)} × {fp(1 / p)} = {fr(a / p)}"
-
-
-def conta_soma(a, m, p):
-    """'-3 + 4 × 2/3 = -3 + 8/3 = (-9 + 8)/3 = -1/3'."""
-    a, m, p = Fraction(a), Fraction(m), Fraction(p)
-    prod = m * p
-    s = f"{fr(a)} + {fp(m)} × {fp(p)}"
-    if prod == 0 or a == 0:
-        return f"{s} = {fr(a + prod)}"
-    s += f" = {fr(a)} {'+' if prod > 0 else '-'} {fr(abs(prod))}"
-    d = lcm(a.denominator, prod.denominator)
-    if d > 1:
-        A, B = int(a * d), int(prod * d)
-        s += f" = ({A} {'+' if B > 0 else '-'} {abs(B)})/{d}"
-    return f"{s} = {fr(a + prod)}"
-
-
-def _soma(valores):
-    """'27/4 + 6 = (27 + 24)/4 = 51/4'."""
-    total = sum(valores, Fraction(0))
-    if len(valores) == 1:
-        return fr(total)
-    s = fr(valores[0]) + "".join(f" - {fr(-v)}" if v < 0 else f" + {fr(v)}" for v in valores[1:])
-    d = lcm(*[Fraction(v).denominator for v in valores])
-    if d > 1:
-        n = [int(v * d) for v in valores]
-        s += f" = ({n[0]}" + "".join(f" - {-k}" if k < 0 else f" + {k}" for k in n[1:]) + f")/{d}"
-    return f"{s} = {fr(total)}"
-
-
 def expressao(coefs, nomes, usa_decimal, constante=None):
     """'2x1 + x2 - 0,5x3'. Coeficiente 0 não aparece; a constante, se houver, vem primeiro."""
     partes = [] if constante is None else [num(constante, usa_decimal)]
@@ -125,11 +89,11 @@ def expressao(coefs, nomes, usa_decimal, constante=None):
 
 
 def substituicao(coefs, nomes, valores, usa_decimal):
-    """'3 × 9/4 + 4 × 3/2 = 27/4 + 6 = (27 + 24)/4 = 51/4' (os valores vêm do dicionário)."""
+    """'3 × 9/4 + 4 × 3/2 = 51/4' (os valores vêm do dicionário)."""
     termos = [(a, valores[n]) for a, n in zip(coefs, nomes) if a != 0]
     texto = " + ".join(f"{num(a, usa_decimal) if i == 0 or a > 0 else '(' + num(a, usa_decimal) + ')'} × {fp(v)}"
                        for i, (a, v) in enumerate(termos))
-    return f"{texto} = {_soma([a * v for a, v in termos])}"
+    return f"{texto} = {fr(sum((a * v for a, v in termos), Fraction(0)))}"
 
 
 # ---------- leitura do arquivo da questão ----------
@@ -323,41 +287,26 @@ class _Tabela:
         return _Tabela(self.nome_z, [self.colunas[j] for j in manter], linhas, dict(self.base))
 
 
-def _imprimir(t, k, res, piv=None, titulo=""):
-    res.texto += [f"**Quadro {k}**{titulo}", "", t.markdown(piv), ""]
+def _imprimir(t, k, res, piv=None):
+    res.texto += [f"**Quadro {k}**", "", t.markdown(piv), ""]
     res.quadros.append(t.quadro())
 
 
 def _pivotear(t, lp, jj, fase, res, k, txt):
-    """Quadro k com o pivô marcado, passo 1 (dividir) e passo 2 (zerar). Devolve o número do próximo quadro."""
-    col, piv, nomes = t.colunas[jj - 1], t.linhas[lp][jj], t.colunas + ["bn"]
+    """Quadro k com o pivô marcado e as operações da iteração. Devolve o número do próximo quadro."""
+    col, piv = t.colunas[jj - 1], t.linhas[lp][jj]
     _imprimir(t, k, res, (lp, jj))
-    res.texto += txt + [""]
     res.pivos.append((fase, col, lp))
-    if piv == 1:
-        res.texto += ["Passo 1 — o pivô já é 1: a linha pivô não muda.", ""]
-    else:
-        res.texto += [f"Passo 1 — dividir a linha pivô: `nova {lp} = {lp} ÷ {fp(piv)}`", ""]
-        res.texto += [f"- {n}: {conta_div(v, piv)}" for n, v in zip(nomes, t.linhas[lp][1:]) if v != 0] + [""]
-        t.linhas[lp] = [v / piv for v in t.linhas[lp]]
-        k += 1
-        _imprimir(t, k, res, titulo=" (só a linha pivô dividida; as outras copiadas)")
-        mult = " · ".join(f"{r}: × {fp(-v[jj])}" for r, v in t.linhas.items() if r != lp and v[jj] != 0)
-        res.texto += [f"Multiplicadores (no papel: setas saindo da nova {lp}, com o número circulado e \"+\"): {mult}", ""]
+    ops = [] if piv == 1 else [f"{lp} ÷ {fp(piv)}"]
+    t.linhas[lp] = [v / piv for v in t.linhas[lp]]
     nova = t.linhas[lp]
-    res.texto += [f"Passo 2 — zerar a coluna {col} nas outras linhas (só aparecem os elementos que mudam):", ""]
     for r, v in t.linhas.items():
-        if r == lp:
-            continue
         m = -v[jj]
-        if m == 0:
-            res.texto.append(f"- {r}: já tem 0 na coluna {col} → não muda")
+        if r == lp or m == 0:
             continue
-        res.texto.append(f"- nova {r} = {r} + {fp(m)} × (nova {lp})")
-        res.texto += [f"  - {n}: {conta_soma(a, m, p)}" for n, a, p, i in
-                      zip(nomes, v[1:], nova[1:], range(1, len(v))) if p != 0 and i != jj]
+        ops.append(f"{r} {'+' if m > 0 else '-'} {fr(abs(m))} × {lp}")
         t.linhas[r] = [a + m * p for a, p in zip(v, nova)]
-    res.texto.append("")
+    res.texto += txt + [f"- Operações: {'; '.join(ops)}", ""]
     t.base[lp] = col
     return k + 1
 
@@ -381,18 +330,17 @@ def _iterar(t, obj, fase, res, k):
         menor = min(q for q, _ in razoes)
         empate = [r for q, r in razoes if q == menor]
         lp = empate[0]  # empate: a linha mais acima
-        txt.append(f"- Razões (bn ÷ elemento positivo da coluna {col}):")
+        partes = []
         for r in t.restricoes():
             e, b = t.linhas[r][jj], t.linhas[r][-1]
             if e > 0:
-                q = b / e
-                aprox = "" if q.denominator == 1 else f" {'=' if _casas_exatas(q) is not None else '≈'} {decimal(q)}"
-                txt.append(f"  - {r}: {conta_div(b, e)}{aprox}" + (" ← menor" if r == lp else ""))
+                partes.append(f"{r}: {fr(b)} ÷ {fr(e)} = {valor_com_decimal(b / e)}" + (" ← menor" if r == lp else ""))
             else:
-                txt.append(f"  - {r}: o elemento {fr(e)} {'é zero' if e == 0 else 'é negativo'} → não entra")
+                partes.append(f"{r}: não entra ({fr(e)})")
+        txt.append(f"- Razões: {' · '.join(partes)}")
         if len(empate) > 1:
             res.degenerado = True
-            txt.append(f"  - Empate na menor razão: fica a linha mais acima ({lp}); a solução é degenerada.")
+            txt.append(f"- Empate na menor razão: fica a linha mais acima ({lp}); a solução é degenerada.")
         txt.append(f"- Linha pivô: **{lp}** · Pivô: **{fr(t.linhas[lp][jj])}**")
         k = _pivotear(t, lp, jj, fase, res, k, txt)
     raise ErroResolver(f"mais de {MAX_PIVOS} pivoteamentos.")
@@ -632,8 +580,8 @@ def _bloco(linhas):
     return ["```"] + linhas + ["```"]
 
 
-def _secoes_resolucao(p, r, n0, titulo_quadros="Quadros", com_substituicao=False):
-    """Forma padrão, quadros e leitura (seções n0 a n0 + 2). Devolve as linhas."""
+def _secoes_resolucao(p, r, n0, titulo_quadros="Quadros"):
+    """Forma padrão e quadros (seções n0 e n0 + 1). Devolve as linhas."""
     out = [f"### {n0}. Forma padrão", ""]
     decimais = _decimais(p) if p.usa_decimal else ""
     if decimais:
@@ -645,40 +593,22 @@ def _secoes_resolucao(p, r, n0, titulo_quadros="Quadros", com_substituicao=False
     out += [f"### {n0 + 1}. {titulo_quadros}", ""] + r.texto
     if r.status != "otimo":
         return out
-    out += [f"### {n0 + 2}. Leitura do quadro final", ""]
-    basicas = "; ".join(f"{c} = {fr(r.valores[c])} ({lin})" for lin, c in r.base.items())
-    nao = [c for c in r.valores if c not in r.base.values()]
-    out.append(f"- Básicas: {basicas}")
-    if nao:
-        out.append(f"- Não básicas (valem 0): {', '.join(nao)}")
-    bn = r.z if p.sentido == "max" else -r.z
-    out.append(f"- A LZ diz {p.nome} = {fr(bn)}." if p.sentido == "max"
-               else f"- A LZ diz -{p.nome} = {fr(bn)}, logo {p.nome} = {fr(r.z)}.")
+    if p.sentido == "min":
+        out += [f"A LZ diz -{p.nome} = {fr(-r.z)}, logo {p.nome} = {fr(r.z)}.", ""]
     if r.otimos_multiplos:
-        out.append(f"- Observação: {r.alternativa} é não básica e tem 0 na LZ → há outras soluções ótimas com o mesmo {p.nome}.")
-    out.append("")
-    if com_substituicao:
-        out += _bloco([_linha_substituicao(p, {v: r.valores[v] for v in p.variaveis})]) + [""]
+        out += [f"Observação: {r.alternativa} é não básica e tem 0 na LZ → há outras soluções ótimas "
+                f"com o mesmo {p.nome}.", ""]
     return out
 
 
 def _linha_substituicao(p, x):
-    """'Z = 3x1 + 4x2 = 3 × 9/4 + 4 × 3/2 = ... = 51/4'."""
+    """'Z = 3x1 + 4x2 = 3 × 9/4 + 4 × 3/2 = 51/4'."""
     return f"{p.nome} = {expressao(p.c, p.variaveis, p.usa_decimal)} = {substituicao(p.c, p.variaveis, x, p.usa_decimal)}"
 
 
 def _resposta(p, valores, z):
     partes = "; ".join(f"{v} = {valor_com_decimal(valores[v])}" for v in p.variaveis)
-    return f"{partes}; **{p.nome} = {valor_com_decimal(z)}**"
-
-
-def _conferencia(p, x):
-    out = []
-    for a, op, b in zip(p.A, p.ops, p.b):
-        lhs = sum((ai * x[v] for ai, v in zip(a, p.variaveis)), Fraction(0))
-        resto = {"<=": f" (folga {fr(b - lhs)})", ">=": f" (excesso {fr(lhs - b)})", "=": ""}[op]
-        out.append(f"- {substituicao(a, p.variaveis, x, p.usa_decimal)} {SIMBOLO[op]} {num(b, p.usa_decimal)} ✓{resto}")
-    return out
+    return f"{partes}; {p.nome} = {valor_com_decimal(z)}"
 
 
 def _texto_status(status):
@@ -690,12 +620,11 @@ def _texto_primal(p):
     r = resolver_problema(p)
     metodo = _metodo(r, p)
     out = [f"**Método:** {metodo[0].upper()}{metodo[1:]}", "", "### 1. Modelo", ""] + _bloco(_linhas_modelo(p)) + [""]
-    out += _secoes_resolucao(p, r, 2)
+    out += _secoes_resolucao(p, r, 2) + ["### 4. Resposta", ""]
     if r.status != "otimo":
-        return "\n".join(out + ["### 4. Resposta", "", f"> **RESPOSTA:** {_texto_status(r.status)}", ""])
+        return "\n".join(out + [f"**Resposta:** {_texto_status(r.status)}", ""])
     x = {v: r.valores[v] for v in p.variaveis}
-    out += ["### 5. Resposta", ""] + _bloco([_linha_substituicao(p, x)]) + [""]
-    out += [f"> **RESPOSTA:** {_resposta(p, x, r.z)}", "", "### 6. Conferência", ""] + _conferencia(p, x) + [""]
+    out += _bloco([_linha_substituicao(p, x)]) + ["", f"**Resposta:** {_resposta(p, x, r.z)}", ""]
     return "\n".join(out)
 
 
@@ -733,21 +662,17 @@ def _texto_dual(p):
     d, r = rd.dual, rd.resultado
     out = [f"**Método:** dual, resolvido por {_metodo(r, d)}", "", "### 1. Primal e dual", ""]
     out += _bloco(_lado_a_lado(p, d)) + [""]
-    out += _secoes_resolucao(d, r, 2, titulo_quadros="Quadros do dual", com_substituicao=True)
+    out += _secoes_resolucao(d, r, 2, titulo_quadros="Quadros do dual") + ["### 4. Resposta", ""]
     if r.status != "otimo":
         texto = ("o dual é ilimitado, então o primal não tem solução viável." if r.status == "ilimitado"
                  else "o dual não tem solução viável e o primal "
                  + ("é ilimitado." if rd.status_primal == "ilimitado" else "também não tem solução viável."))
-        return "\n".join(out + ["### 4. Resposta", "", f"> **RESPOSTA:** {texto}", ""])
+        return "\n".join(out + [f"**Resposta:** {texto}", ""])
     y = {v: r.valores[v] for v in d.variaveis}
-    out += ["### 5. Solução do primal (lida na LZ final do dual)", ""]
-    out += [f"- coluna {d.letra}f{j} → {v} = {fr(rd.x[v])}" for j, v in enumerate(p.variaveis, 1)] + [""]
+    lidos = " · ".join(f"coluna {d.letra}f{j} → {v} = {fr(rd.x[v])}" for j, v in enumerate(p.variaveis, 1))
+    out += [f"Primal lido na LZ final do dual: {lidos}", ""]
     out += _bloco([_linha_substituicao(p, rd.x)]) + [""]
-    out += ["### 6. Resposta", "", f"> **RESPOSTA:** {_resposta(p, rd.x, rd.z)}", ">",
-            f"> **Dual:** {_resposta(d, y, r.z)}", ""]
-    out += ["### 7. Conferência", "", "Primal:", ""] + _conferencia(p, rd.x)
-    out += ["", "Dual:", ""] + _conferencia(d, y)
-    out += ["", f"- {p.nome} = {d.nome} = {fr(rd.z)} ✓", ""]
+    out += [f"**Resposta:** {_resposta(p, rd.x, rd.z)}", "", f"**Dual:** {_resposta(d, y, r.z)}", ""]
     return "\n".join(out)
 
 

@@ -6,7 +6,7 @@ Você resolve questões de Programação Matemática que chegam como imagem. **T
 
 | Arquivo | Para quê |
 |---|---|
-| `resolver.py` | Faz as contas e escreve a resolução completa no formato do caderno. |
+| `resolver.py` | Faz as contas e escreve a resolução enxuta, pronta para copiar: modelo, forma padrão, um quadro por iteração (pivô, razões e operações) e resposta. |
 | `testes.py` | Testes do resolver. Antes da primeira questão, rode `python3 testes.py`: tem de terminar com `OK`. Se não terminar, pare tudo e avise. |
 | `referencia_resolucoes.md` | Como o caderno ensina (já corrigido), exemplos resolvidos e os erros do material original. Leia antes de começar. |
 

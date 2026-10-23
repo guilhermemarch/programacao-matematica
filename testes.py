@@ -82,6 +82,13 @@ y1 + 5y2 + 3y3 + 4y4 <= 1
 y1, y2, y3, y4 >= 0
 resolver: primal
 """
+Q1 = """
+min Z = 5x1 + 4x2
+2x1 + x2 >= 12
+x1 + 2x2 >= 12
+x1, x2 >= 0
+resolver: dual
+"""
 MISTO = """
 max Z = x1 + 2x2
 x1 + x2 <= 4
@@ -151,17 +158,10 @@ class TestNumeros(unittest.TestCase):
         self.assertEqual(r.valor_com_decimal(F(60)), "60")
         self.assertEqual(r.valor_com_decimal(F(-240, 13)), "-240/13 ≈ -18,46")
 
-    def test_conta_de_elemento_com_denominador_comum(self):
-        self.assertEqual(r.conta_soma(F(-3), F(4), F(2, 3)),
-                         "-3 + 4 × 2/3 = -3 + 8/3 = (-9 + 8)/3 = -1/3")
-        self.assertEqual(r.conta_soma(F(1, 2), F(-2, 5), F(3, 5)),
-                         "1/2 + (-2/5) × 3/5 = 1/2 - 6/25 = (25 - 12)/50 = 13/50")
-        self.assertEqual(r.conta_soma(F(0), F(4), F(1, 3)), "0 + 4 × 1/3 = 4/3")
-
 
 class TestExemplosDoCaderno(unittest.TestCase):
-    def test_3_1_terceiro_quadro_igual_ao_caderno(self):
-        q = resolver(EX_3_1).quadros[2].linhas
+    def test_3_1_quadro_depois_da_1a_iteracao_igual_ao_caderno(self):  # o 3º quadro do caderno
+        q = resolver(EX_3_1).quadros[1].linhas
         self.assertEqual(q["LZ"], [1, F(-1, 3), 0, 0, F(4, 3), 12])
         self.assertEqual(q["L1"], [0, F(4, 3), 0, 1, F(-1, 3), 3])
         self.assertEqual(q["L2"], [0, F(2, 3), 1, 0, F(1, 3), 3])
@@ -173,7 +173,7 @@ class TestExemplosDoCaderno(unittest.TestCase):
 
     def test_3_2_continua_enquanto_houver_negativo_na_lz(self):  # o caderno parou em Z = 10,2
         res = resolver(EX_3_2)
-        self.assertEqual(res.quadros[2].linhas["L2"], [0, F(-1, 2), 1, 0, F(1, 2), 0, 2])
+        self.assertEqual(res.quadros[1].linhas["L2"], [0, F(-1, 2), 1, 0, F(1, 2), 0, 2])
         self.assertEqual([p[1] for p in res.pivos], ["x2", "x1", "xf2"])
         self.assertEqual((res.valores["x1"], res.valores["x2"], res.z), (F(9, 2), F(3, 2), F(27, 2)))
 
@@ -215,6 +215,12 @@ class TestAtividades(unittest.TestCase):
         rd = r.resolver_pelo_dual(r.ler(AT_2))
         self.assertEqual(rd.x, {"x1": 0, "x2": F(5, 2), "x3": F(25, 2)})
         self.assertEqual(rd.z, F(35, 2))
+
+    def test_questao_1_minimizacao_pelo_dual(self):
+        rd = r.resolver_pelo_dual(r.ler(Q1))
+        self.assertEqual(rd.resultado.pivos, [("simplex", "y1", "L1"), ("simplex", "y2", "L2")])
+        self.assertEqual(rd.x, {"x1": 4, "x2": 4})
+        self.assertEqual(rd.z, 36)
 
     def test_dual_de_max_le_x_no_quadro_final_do_dual(self):
         rd = r.resolver_pelo_dual(r.ler(AT_1))
@@ -312,7 +318,7 @@ class TestSaida(unittest.TestCase):
     def test_cli_imprime_a_resposta(self):
         saida = self.rodar(EX_3_1)
         self.assertEqual(saida.returncode, 0, saida.stderr)
-        self.assertIn("> **RESPOSTA:** x1 = 9/4 = 2,25; x2 = 3/2 = 1,5; **Z = 51/4 = 12,75**", saida.stdout)
+        self.assertIn("**Resposta:** x1 = 9/4 = 2,25; x2 = 3/2 = 1,5; Z = 51/4 = 12,75", saida.stdout)
 
     def test_cli_erro_de_formato_sai_com_codigo_1(self):
         saida = self.rodar("max Z = x1\nx1 <= 30.000\nx1 >= 0\nresolver: primal\n")
@@ -329,12 +335,28 @@ class TestSaida(unittest.TestCase):
     def test_saida_do_dual_de_min_mostra_o_dual_e_a_resposta_em_x(self):
         texto = r.gerar_saida(r.ler(AT_2))
         self.assertIn("Max Z1 = 20y1 + 30y2 + 40y3 + 50y4", texto)
-        self.assertIn("x1 = 0; x2 = 5/2 = 2,5; x3 = 25/2 = 12,5; **Z = 35/2 = 17,5**", texto)
+        self.assertIn("**Resposta:** x1 = 0; x2 = 5/2 = 2,5; x3 = 25/2 = 12,5; Z = 35/2 = 17,5", texto)
 
     def test_saida_do_dual_mantem_os_decimais_do_enunciado(self):
         texto = r.gerar_saida(r.ler(AT_1))
         self.assertIn("0,5y1 + 0,1y2 + 0,4y3 ≥ 3", texto)
-        self.assertIn("**Z = 240/13 ≈ 18,46**", texto)
+        self.assertIn("Z = 240/13 ≈ 18,46", texto)
+
+    def test_saida_mostra_as_operacoes_de_cada_iteracao(self):
+        texto = r.gerar_saida(r.ler(EX_3_1))
+        self.assertIn("Operações: L2 ÷ 3; LZ + 4 × L2; L1 - 1 × L2", texto)
+        self.assertIn("Operações: L1 ÷ 4/3; LZ + 1/3 × L1; L2 - 2/3 × L1", texto)
+
+    def test_saida_e_enxuta(self):  # só o que se copia: um quadro por iteração, sem contas de rascunho
+        texto = r.gerar_saida(r.ler(EX_3_1))
+        self.assertEqual(texto.count("**Quadro "), 3)
+        for rascunho in ("Passo", "Multiplicadores", "Conferência", "linha pivô dividida"):
+            self.assertNotIn(rascunho, texto)
+
+    def test_saida_da_questao_1(self):
+        texto = r.gerar_saida(r.ler(Q1))
+        self.assertIn("Max Z1 = 12y1 + 12y2", texto)
+        self.assertIn("**Resposta:** x1 = 4; x2 = 4; Z = 36", texto)
 
 
 if __name__ == "__main__":
