@@ -4,11 +4,17 @@ Resolve questões de programação linear (modelagem, Simplex, duas fases e dual
 
 ## Como usar
 
-1. Use um agente que roda comandos no terminal (Codex, Claude Code) com este repositório clonado.
-2. Mande a imagem da questão e peça: **"Siga o `prompt.md` deste repositório."**
-3. O agente lê a questão, roda o `resolver.py` e devolve a resposta.
+1. Abra uma **conversa nova** num agente que roda comandos no terminal (Codex, Claude Code). Conversa nova importa: pedidos antigos da conversa, como "mostra em tabela", fazem o agente fugir do formato.
+2. Anexe a imagem (ou as imagens) das questões e mande o prompt abaixo, sem mudar nada.
+3. O agente clona o repositório, roda o `resolver.py` e responde só com os quadros para copiar.
 
 Não use um chat sem terminal, como o ChatGPT na web: ele não consegue rodar o resolver e faz as contas à mão.
+
+### Prompt para o agente
+
+```text
+Clone https://github.com/guilhermemarch/programacao-matematica.git (se a pasta já existir, entre nela e rode git pull). Dentro da pasta, leia o prompt.md e siga-o à risca para resolver as questões das imagens anexas: toda conta sai do resolver.py, nunca à mão. Responda só com o que a seção "Resposta" do prompt.md manda: os quadros de texto do resolver, um por questão, sem nada antes, depois ou entre eles.
+```
 
 ## O que copiar no caderno
 
