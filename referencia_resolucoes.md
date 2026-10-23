@@ -176,7 +176,7 @@ Na foto da p21, a 3ª restrição do primal está escrita `0,4x1 + 0,3x2 ≤ 3`,
 8. Contas de fração no canto da página: `2 - 2/3 = (6 - 2)/3 = 4/3`.
 9. No fim, os valores das variáveis, Z calculado por substituição e o resultado dentro de uma caixa.
 
-A saída do `resolver.py` segue essa ordem e já vem no formato do papel, dentro de um único quadro de texto: tudo o que está dentro dele se copia, e fora dele só há a legenda. Os quadros vêm com grade, para facilitar a leitura das colunas. `(3)` é o número a circular, junto com a coluna dele; `÷3` vai ao lado da linha pivô; `← (4)` é a seta saindo da linha pivô até a linha, com o 4 circulado; `→ x1 = 9/4` é a leitura do quadro final, saindo do b da linha; e a caixa desenhada é a caixa do resultado. Quando o pivô já é 1, não há quadro só com a linha dividida: as setas vão no próprio quadro do pivô. As contas de fração do item 8 não aparecem, porque os números dos quadros já vêm calculados.
+A saída do `resolver.py` segue essa ordem e já vem no formato do papel, dentro de um único quadro de texto, e não há nada fora dele: tudo o que sai se copia (a legenda das marcas está no README). Os quadros vêm com grade, para facilitar a leitura das colunas. `(3)` é o número a circular, junto com a coluna dele; `÷3` vai ao lado da linha pivô; `← (4)` é a seta saindo da linha pivô até a linha, com o 4 circulado; `→ x1 = 9/4` é a leitura do quadro final, saindo do b da linha; e a caixa desenhada é a caixa do resultado. Quando o pivô já é 1, não há quadro só com a linha dividida: as setas vão no próprio quadro do pivô. As contas de fração do item 8 não aparecem, porque os números dos quadros já vêm calculados.
 
 ## 3. Exemplos resolvidos
 
@@ -193,8 +193,6 @@ resolver: primal
 ```
 
 Saída do `resolver.py`:
-
-**Copie no caderno só o que está dentro do quadro abaixo.** (x) = circule o número e a coluna dele · ÷2 = escreva ao lado da linha · ← (12) = seta saindo da linha do pivô até esta linha, com o 12 circulado.
 
 ```text
 Max Z = 3x1 + 4x2
@@ -275,8 +273,6 @@ resolver: dual
 ```
 
 Saída do `resolver.py`:
-
-**Copie no caderno só o que está dentro do quadro abaixo.** (x) = circule o número e a coluna dele · ÷2 = escreva ao lado da linha · ← (12) = seta saindo da linha do pivô até esta linha, com o 12 circulado.
 
 ```text
 Max Z = 3x1 + 2x2         Min Z1 = 3y1 + y2 + 3y3
@@ -415,8 +411,6 @@ resolver: dual
 ```
 
 Saída do `resolver.py`:
-
-**Copie no caderno só o que está dentro do quadro abaixo.** (x) = circule o número e a coluna dele · ÷2 = escreva ao lado da linha · ← (12) = seta saindo da linha do pivô até esta linha, com o 12 circulado.
 
 ```text
 Min Z = 5x1 + 2x2 + x3       Max Z1 = 20y1 + 30y2 + 40y3 + 50y4

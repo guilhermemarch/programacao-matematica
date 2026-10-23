@@ -90,9 +90,7 @@ x1 + 2x2 >= 12
 x1, x2 >= 0
 resolver: dual
 """
-SAIDA_Q1 = """**Copie no caderno só o que está dentro do quadro abaixo.** (x) = circule o número e a coluna dele · ÷2 = escreva ao lado da linha · ← (12) = seta saindo da linha do pivô até esta linha, com o 12 circulado.
-
-```text
+SAIDA_Q1 = """```text
 Min Z = 5x1 + 4x2       Max Z1 = 12y1 + 12y2
 { 2x1 + x2 ≥ 12     →   { 2y1 + y2 ≤ 5
 { x1 + 2x2 ≥ 12         { y1 + 2y2 ≤ 4
@@ -388,9 +386,9 @@ class TestCasosEspeciais(unittest.TestCase):
 
 
 class TestSaida(unittest.TestCase):
-    def rodar(self, texto):
+    def rodar(self, texto, nome="q.txt"):
         with tempfile.TemporaryDirectory() as pasta:
-            arquivo = os.path.join(pasta, "q.txt")
+            arquivo = os.path.join(pasta, nome)
             with open(arquivo, "w", encoding="utf-8") as f:
                 f.write(texto)
             return subprocess.run([sys.executable, os.path.join(PASTA, "resolver.py"), arquivo],
@@ -400,6 +398,11 @@ class TestSaida(unittest.TestCase):
         saida = self.rodar(EX_3_1)
         self.assertEqual(saida.returncode, 0, saida.stderr)
         self.assertIn("│ Z = 51/4 = 12,75 │", saida.stdout)
+
+    def test_cli_titulo_vem_do_nome_do_arquivo(self):
+        self.assertTrue(self.rodar(EX_3_1, "q2a.txt").stdout.startswith("```text\nQuestão 2a\n\nMax Z = 3x1 + 4x2\n"))
+        self.assertTrue(self.rodar(EX_3_1, "q7.txt").stdout.startswith("```text\nQuestão 7\n\nMax Z"))
+        self.assertTrue(self.rodar(EX_3_1, "exemplo.txt").stdout.startswith("```text\nMax Z"))
 
     def test_cli_erro_de_formato_sai_com_codigo_1(self):
         saida = self.rodar("max Z = x1\nx1 <= 30.000\nx1 >= 0\nresolver: primal\n")
@@ -430,15 +433,19 @@ class TestSaida(unittest.TestCase):
         self.assertIn("Fase 1", texto)
         self.assertIn("W = 0 → fim da Fase 1", texto)
 
-    def test_saida_e_so_o_quadro_de_copiar(self):  # fora do bloco, só a legenda
+    def test_saida_e_so_o_quadro_de_copiar(self):  # nada fora do bloco: tudo o que sai se copia
         for questao in (EX_3_1, AT_1, AT_2, Q1, MISTO):
             texto = r.gerar_saida(r.ler(questao))
-            self.assertEqual(texto.count("```"), 2)
-            antes, bloco, depois = texto.split("```")
-            self.assertTrue(antes.startswith("**Copie no caderno só o que está dentro do quadro abaixo.**"))
-            self.assertEqual(depois.strip(), "")
-            for fora in ("LZ", "L1", "Passo", "Multiplicadores", "Conferência", "Operações", "Método", "**"):
+            self.assertTrue(texto.startswith("```text\n"))
+            self.assertTrue(texto.endswith("\n```\n"))
+            bloco = texto[len("```text\n"):-len("```\n")]
+            self.assertNotIn("```", bloco)
+            for fora in ("LZ", "L1", "Passo", "Multiplicadores", "Conferência", "Operações", "Método", "**", "Copie"):
                 self.assertNotIn(fora, bloco)
+
+    def test_titulo_abre_o_quadro_antes_das_variaveis(self):
+        texto = r.gerar_saida(r.ler("x1: produto 1\nx2: produto 2\n" + Q1), "Questão 1")
+        self.assertTrue(texto.startswith("```text\nQuestão 1\n\nx1 = produto 1\nx2 = produto 2\n\nMin Z"))
 
     def test_saida_tem_dois_quadros_por_iteracao(self):  # pivô ≠ 1: o quadro do pivô e o da linha dividida
         texto = r.gerar_saida(r.ler(EX_3_1))

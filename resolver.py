@@ -2,12 +2,13 @@
 
 Uso: python3 resolver.py questoes/q1.txt
 
-O formato do arquivo da questão está no prompt.md. A saída é uma legenda e um único
-quadro de texto com o que se copia no caderno, no formato das atividades: modelo, forma
+O formato do arquivo da questão está no prompt.md. A saída é só um quadro de texto com o
+que se copia no caderno, no formato das atividades: título (do nome do arquivo), modelo, forma
 padrão, dois quadros por iteração (o do pivô e o da linha pivô dividida, com as setas),
 leitura do quadro final e Z por substituição na caixa. A conferência roda por dentro.
 Quando o caso não é coberto, o resolver para com uma mensagem de erro (código 1).
 """
+import os
 import re
 import sys
 from dataclasses import dataclass, field
@@ -562,10 +563,6 @@ def resolver_pelo_dual(p):
 
 # ---------- saída: o que se copia no caderno ----------
 
-LEGENDA = ("**Copie no caderno só o que está dentro do quadro abaixo.** (x) = circule o número e a coluna dele · "
-           "÷2 = escreva ao lado da linha · ← (12) = seta saindo da linha do pivô até esta linha, com o 12 circulado.")
-
-
 def _com_chave(linhas):
     """A primeira linha solta e as outras com a chave: '{ 2x1 + x2 ≤ 6'."""
     return linhas[:1] + [f"{{ {linha}" for linha in linhas[1:]]
@@ -689,8 +686,14 @@ def _linhas_dual(p):
     return out + _substituicao(p, rd.x, rd.z)
 
 
-def gerar_saida(p):
-    """A legenda e um único quadro de texto com tudo o que se copia no caderno, conforme o modo pedido."""
+def titulo(caminho):
+    """'questoes/q2a.txt' -> 'Questão 2a'; outro nome de arquivo -> None."""
+    m = re.fullmatch(r"q(\d+[a-z]?)\.txt", os.path.basename(caminho))
+    return f"Questão {m.group(1)}" if m else None
+
+
+def gerar_saida(p, titulo=None):
+    """Um único quadro de texto com tudo o que se copia no caderno, conforme o modo pedido, e nada fora dele."""
     if p.modo == "modelo":
         linhas = _com_chave(_linhas_modelo(p))
     elif p.modo == "primal":
@@ -709,9 +712,11 @@ def gerar_saida(p):
             linhas += ["", f"Z (primal) = Z1 (dual) = {valor_com_decimal(rp.z)}"]
     if p.descricoes:
         linhas = [f"{v} = {texto}" for v, texto in p.descricoes.items()] + [""] + linhas
+    if titulo:
+        linhas = [titulo, ""] + linhas
     while linhas and not linhas[-1]:
         linhas.pop()
-    return "\n".join([LEGENDA, "", "```text"] + linhas + ["```", ""])
+    return "\n".join(["```text"] + linhas + ["```", ""])
 
 
 def main(argv):
@@ -720,7 +725,7 @@ def main(argv):
         return 2
     try:
         with open(argv[1], encoding="utf-8") as f:
-            print(gerar_saida(ler(f.read())))
+            print(gerar_saida(ler(f.read()), titulo(argv[1])), end="")
     except ErroEntrada as e:
         print(f"ERRO DE FORMATO (corrija o arquivo da questão): {e}", file=sys.stderr)
         return 1

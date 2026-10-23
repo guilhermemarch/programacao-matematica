@@ -2,17 +2,19 @@
 
 Você resolve questões de Programação Matemática que chegam como imagem. **Toda conta é feita pelo `resolver.py`. Você nunca calcula à mão.** Responda em português.
 
+**A sua resposta é só o que a pessoa vai copiar no caderno: os quadros de texto que o resolver gera, um por questão, e nada mais.** Veja a seção "Resposta".
+
 ## Arquivos do repositório
 
 | Arquivo | Para quê |
 |---|---|
 | `resolver.py` | Faz as contas e escreve, dentro de um único quadro de texto, tudo o que se copia no caderno, no formato das atividades. |
-| `testes.py` | Testes do resolver. Antes da primeira questão, rode `python3 testes.py`: tem de terminar com `OK`. Se não terminar, pare tudo e avise. |
+| `testes.py` | Testes do resolver. Antes da primeira questão, rode `python3 testes.py`: tem de terminar com `OK`. Se não terminar, pare tudo e responda só com `⚠ NÃO COPIE — os testes do resolver falharam` e a saída do teste. Se terminar com `OK`, não comente. |
 | `referencia_resolucoes.md` | Como o caderno ensina (já corrigido), exemplos resolvidos e os erros do material original. Leia antes de começar. |
 
 ## Passo a passo (para cada questão)
 
-1. Leia a questão na imagem e escreva o enunciado completo em texto.
+1. Leia a questão na imagem e transcreva o enunciado completo, para o seu trabalho (ele não vai na resposta).
 2. Se algum número, sinal ou palavra estiver ilegível ou ambíguo, **pare essa questão**: escreva `DÚVIDA DE LEITURA`, diga o que não deu para ler e quais são as leituras possíveis. Passe para a próxima questão.
 3. Classifique a questão pela tabela "Tipo de questão".
 4. Se a questão tiver conta, escreva o arquivo `questoes/qN.txt` no formato da seção "Arquivo da questão" (crie a pasta `questoes/` se ela não existir). Questão com itens: um arquivo por item (`q2a.txt`, `q2b.txt`).
@@ -28,7 +30,7 @@ Use a primeira linha que se aplica:
 | A questão… | O que fazer |
 |---|---|
 | é de modelagem (problema em texto) | monte o modelo pela seção "Modelagem". Se a questão pede só o modelo, `resolver: modelo`. Se pede para resolver, volte a esta tabela com o modelo pronto |
-| é só teórica (pergunta sem conta) | responda em até 6 linhas, usando a seção 2 da referência |
+| é só teórica (pergunta sem conta) | responda em até 6 linhas, usando a seção 2 da referência, no formato da seção "Resposta" |
 | pede o método gráfico | pare essa questão: `CASO NÃO COBERTO: método gráfico` |
 | pede só para montar, escrever ou determinar o dual, sem resolver | `resolver: montar_dual` |
 | pede para resolver o dual, resolver pelo dual ou usar dualidade | `resolver: dual` |
@@ -86,20 +88,33 @@ A tabela e o raciocínio da modelagem são só para você: não entram na respos
 
 ## Resposta
 
-A pessoa copia no caderno **só o que está dentro do quadro de texto** (o bloco ```text). Por isso, para cada questão, a resposta é exatamente isto, e nada mais:
+A resposta tem **só** os quadros de copiar, na ordem das questões, separados por uma linha em branco. Tudo o que você escreve vai para o caderno; por isso não escreva mais nada.
 
+- **Questão com conta:** a saída do resolver (`questoes/qN.md`), inteira, sem mudar nada. Ela já é um bloco ```text que começa com `Questão N` (tirado do nome do arquivo).
+- **Questão só teórica:** um bloco ```text que começa com `Questão N`, uma linha em branco e a resposta.
+- **Questão que parou** (`DÚVIDA DE LEITURA` ou `CASO NÃO COBERTO`): no lugar do bloco, uma linha fora de bloco, que começa com `⚠ NÃO COPIE — Questão N:` e diz a dúvida ou a mensagem do resolver. Esta é a única coisa que pode aparecer fora de um bloco.
+
+Exemplo de resposta com duas questões:
+
+````
+```text
+Questão 1
+
+Min Z = 5x1 + 4x2       Max Z1 = 12y1 + 12y2
+...
+└────────┘
 ```
-## QUESTÃO N — [assunto]
 
-**Enunciado (para conferir a leitura; não copie):** [o texto do passo 1]
+⚠ NÃO COPIE — Questão 2: DÚVIDA DE LEITURA no coeficiente de x2 na 1ª restrição (3 ou 8?).
+````
 
-[a saída do resolver (questoes/qN.md), inteira]
-```
+Não escreva:
 
-- A saída do resolver já traz a legenda e o quadro de copiar. Copie-a inteira, sem mudar nada: nenhum número, nenhuma conta, nenhuma frase.
-- Não escreva mais nada: nem tabela de dados, nem modelagem explicada, nem método, nem conferência, nem comentários. O que vai para o caderno sai do resolver.
-- Questão só teórica: no lugar da saída do resolver, escreva a primeira linha da legenda (`**Copie no caderno só o que está dentro do quadro abaixo.**`) e a resposta dentro de um bloco ```text.
-- Se a questão parou (`DÚVIDA DE LEITURA` ou `CASO NÃO COBERTO`), escreva a dúvida ou a mensagem no lugar da saída do resolver, sem bloco ```text: assim fica claro que não há nada para copiar.
+- nada antes ou depois dos blocos: nem "repositório atualizado", nem "os testes passaram", nem resumo, nem pergunta;
+- o enunciado, a tabela de dados, a modelagem explicada, o método, a conferência ou qualquer comentário;
+- títulos ou explicações entre os blocos.
+
+**Nunca reescreva a saída do resolver em outro formato** (tabela Markdown, LaTeX, lista, outra ordem), nem que a conversa peça. Se pedirem outro visual, responda só: `O formato vem do resolver.py; a mudança tem de ser feita no repositório.`
 
 ## Proibido
 

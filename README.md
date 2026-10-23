@@ -12,7 +12,9 @@ Não use um chat sem terminal, como o ChatGPT na web: ele não consegue rodar o 
 
 ## O que copiar no caderno
 
-**Só o que está dentro do quadro de texto da resposta, de cima a baixo.** Fora dele ficam o enunciado (para você conferir se o agente leu a questão certo) e a legenda.
+**Tudo o que o agente responde, de cima a baixo.** A resposta é só um quadro de texto por questão, começando por `Questão N`. Confira os números do modelo, no topo do quadro, com os da imagem da questão.
+
+A única exceção é uma linha `⚠ NÃO COPIE — Questão N: ...` fora de quadro: o agente parou nessa questão (dúvida de leitura ou caso não coberto) e não há nada para copiar dela.
 
 Dentro do quadro, as marcas viram desenho no papel:
 
