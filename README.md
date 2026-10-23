@@ -18,6 +18,7 @@ Dentro do quadro, as marcas viram desenho no papel:
 
 | No quadro | No caderno |
 |---|---|
+| grade da tabela | desenhe a tabela com as linhas |
 | `(2)` | circule o número e a coluna dele |
 | `÷2` ao lado da linha | escreva `÷2` ao lado da linha |
 | `← (12)` ao lado da linha | seta saindo da linha do pivô até esta linha, com o 12 circulado |

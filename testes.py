@@ -102,32 +102,47 @@ Z1 - 12y1 - 12y2 = 0
 { 2y1 + y2 + yf1 = 5
 { y1 + 2y2 + yf2 = 4
 
-Z1 | y1   y2   yf1  yf2 | b
-1  | -12  -12  0    0   | 0
-0  | (2)  1    1    0   | 5   ÷2
-0  | 1    2    0    1   | 4
+┌────┬─────┬─────┬─────┬─────┬───┐
+│ Z1 │  y1 │  y2 │ yf1 │ yf2 │ b │
+├────┼─────┼─────┼─────┼─────┼───┤
+│ 1  │ -12 │ -12 │  0  │  0  │ 0 │
+│ 0  │ (2) │  1  │  1  │  0  │ 5 │  ÷2
+│ 0  │  1  │  2  │  0  │  1  │ 4 │
+└────┴─────┴─────┴─────┴─────┴───┘
 razões: 5/2 = 2,5   4/1 = 4
 
-Z1 | y1   y2   yf1  yf2 | b
-1  | -12  -12  0    0   | 0     ← (12)
-0  | (1)  1/2  1/2  0   | 5/2
-0  | 1    2    0    1   | 4     ← (-1)
+┌────┬─────┬─────┬─────┬─────┬─────┐
+│ Z1 │  y1 │  y2 │ yf1 │ yf2 │  b  │
+├────┼─────┼─────┼─────┼─────┼─────┤
+│ 1  │ -12 │ -12 │  0  │  0  │  0  │  ← (12)
+│ 0  │ (1) │ 1/2 │ 1/2 │  0  │ 5/2 │
+│ 0  │  1  │  2  │  0  │  1  │  4  │  ← (-1)
+└────┴─────┴─────┴─────┴─────┴─────┘
 
-Z1 | y1  y2     yf1   yf2 | b
-1  | 0   -6     6     0   | 30
-0  | 1   1/2    1/2   0   | 5/2
-0  | 0   (3/2)  -1/2  1   | 3/2   ÷3/2
+┌────┬────┬───────┬──────┬─────┬─────┐
+│ Z1 │ y1 │   y2  │ yf1  │ yf2 │  b  │
+├────┼────┼───────┼──────┼─────┼─────┤
+│ 1  │ 0  │   -6  │  6   │  0  │  30 │
+│ 0  │ 1  │  1/2  │ 1/2  │  0  │ 5/2 │
+│ 0  │ 0  │ (3/2) │ -1/2 │  1  │ 3/2 │  ÷3/2
+└────┴────┴───────┴──────┴─────┴─────┘
 razões: 5/2 ÷ 1/2 = 5   3/2 ÷ 3/2 = 1
 
-Z1 | y1  y2   yf1   yf2 | b
-1  | 0   -6   6     0   | 30    ← (6)
-0  | 1   1/2  1/2   0   | 5/2   ← (-1/2)
-0  | 0   (1)  -1/3  2/3 | 1
+┌────┬────┬─────┬──────┬─────┬─────┐
+│ Z1 │ y1 │  y2 │ yf1  │ yf2 │  b  │
+├────┼────┼─────┼──────┼─────┼─────┤
+│ 1  │ 0  │  -6 │  6   │  0  │  30 │  ← (6)
+│ 0  │ 1  │ 1/2 │ 1/2  │  0  │ 5/2 │  ← (-1/2)
+│ 0  │ 0  │ (1) │ -1/3 │ 2/3 │  1  │
+└────┴────┴─────┴──────┴─────┴─────┘
 
-Z1 | y1  y2  yf1   yf2  | b
-1  | 0   0   4     4    | 36   → Z1 = 36
-0  | 1   0   2/3   -1/3 | 2    → y1 = 2
-0  | 0   1   -1/3  2/3  | 1    → y2 = 1
+┌────┬────┬────┬──────┬──────┬────┐
+│ Z1 │ y1 │ y2 │ yf1  │ yf2  │ b  │
+├────┼────┼────┼──────┼──────┼────┤
+│ 1  │ 0  │ 0  │  4   │  4   │ 36 │  → Z1 = 36
+│ 0  │ 1  │ 0  │ 2/3  │ -1/3 │ 2  │  → y1 = 2
+│ 0  │ 0  │ 1  │ -1/3 │ 2/3  │ 1  │  → y2 = 1
+└────┴────┴────┴──────┴──────┴────┘
 linha Z1 sem negativo → solução ótima
 
 x1 = 4 (linha Z1, coluna yf1)
@@ -411,7 +426,7 @@ class TestSaida(unittest.TestCase):
 
     def test_duas_fases_marca_a_linha_menos_w(self):  # como na atividade 1
         texto = r.gerar_saida(r.ler(AT_1))
-        self.assertRegex(texto, r"\n-W +\| -4/5 ")
+        self.assertIn("├────┼──────┼───────┼───────┼─────┼─────┼────┼────┼────┤\n│ -W │ -4/5 │", texto)
         self.assertIn("Fase 1", texto)
         self.assertIn("W = 0 → fim da Fase 1", texto)
 
@@ -427,12 +442,12 @@ class TestSaida(unittest.TestCase):
 
     def test_saida_tem_dois_quadros_por_iteracao(self):  # pivô ≠ 1: o quadro do pivô e o da linha dividida
         texto = r.gerar_saida(r.ler(EX_3_1))
-        self.assertEqual(len(re.findall(r"^Z +\| x1", texto, re.M)), 5)
-        self.assertIn("0 | 2   (3)  0    1   | 9   ÷3", texto)
+        self.assertEqual(len(re.findall(r"^│ Z │ +x1", texto, re.M)), 5)
+        self.assertIn("│ 0 │ 2  │ (3) │  0  │  1  │ 9 │  ÷3", texto)
 
     def test_pivo_igual_a_1_nao_repete_o_quadro(self):
         texto = r.gerar_saida(r.ler("max Z = x1 + x2\nx1 <= 1\nx2 <= 2\nx1, x2 >= 0\nresolver: primal\n"))
-        self.assertEqual(len(re.findall(r"^Z +\| x1", texto, re.M)), 3)
+        self.assertEqual(len(re.findall(r"^│ Z │ +x1", texto, re.M)), 3)
         self.assertNotIn("÷", texto.split("```")[1])
 
     def test_descricao_das_variaveis_abre_o_quadro(self):

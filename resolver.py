@@ -283,19 +283,26 @@ class _Tabela:
         return Quadro(list(self.colunas), {r: list(v) for r, v in self.linhas.items()})
 
     def texto(self, marca=None, notas=None):
-        """O quadro como no papel, sem rótulos de linha: (x) no número a circular e a nota de cada linha à direita."""
+        """O quadro com grade, sem rótulos de linha: (x) no número a circular e a nota de cada linha fora da grade."""
         notas = notas or {}
         tabela = [[self.nome_z] + self.colunas + ["b"]]
         for rot, v in self.linhas.items():
             tabela.append(["-W" if rot == "LW" else fr(v[0])]
                           + [f"({fr(x)})" if marca == (rot, j) else fr(x) for j, x in enumerate(v[1:], 1)])
         larg = [max(len(lin[c]) for lin in tabela) for c in range(len(tabela[0]))]
-        out = []
-        for lin, rot in zip(tabela, [None] + list(self.linhas)):
-            cel = [x.ljust(w) for x, w in zip(lin, larg)]
-            s = f"{cel[0]} | {'  '.join(cel[1:-1])} | {cel[-1]}" + (f"   {notas[rot]}" if rot in notas else "")
-            out.append(s.rstrip())
-        return out
+
+        def borda(esq, meio, dir_):
+            return esq + meio.join("─" * (w + 2) for w in larg) + dir_
+
+        def linha(cel, nota=""):
+            return "│" + "│".join(f" {x.center(w)} " for x, w in zip(cel, larg)) + "│" + (f"  {nota}" if nota else "")
+
+        out = [borda("┌", "┬", "┐"), linha(tabela[0]), borda("├", "┼", "┤")]
+        for cel, rot in zip(tabela[1:], self.linhas):
+            if rot == "LW":  # a linha -W fica separada, como na atividade 1
+                out.append(borda("├", "┼", "┤"))
+            out.append(linha(cel, notas.get(rot, "")))
+        return out + [borda("└", "┴", "┘")]
 
     def sem_artificiais(self):
         manter = [j for j, c in enumerate(self.colunas) if c not in self.artificiais]
