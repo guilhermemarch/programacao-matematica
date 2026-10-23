@@ -176,7 +176,7 @@ Na foto da p21, a 3ª restrição do primal está escrita `0,4x1 + 0,3x2 ≤ 3`,
 8. Contas de fração no canto da página: `2 - 2/3 = (6 - 2)/3 = 4/3`.
 9. No fim, os valores das variáveis, Z calculado por substituição e o resultado dentro de uma caixa.
 
-A saída do `resolver.py` é a versão enxuta, só com o que se copia: um quadro por iteração, com o pivô como **[3]** (para circular), as razões e a linha "Operações". Em `Operações: L2 ÷ 3; LZ + 4 × L2; L1 - 1 × L2`, o `L2 ÷ 3` é o `÷ 3` ao lado da linha pivô, e cada `LZ + 4 × L2` é uma seta saindo da nova L2 com o multiplicador 4 circulado. O quadro intermediário do item 7 (só a linha pivô dividida) e as contas do item 8 não aparecem na saída. A caixa do item 9 é a linha "Resposta".
+A saída do `resolver.py` segue essa ordem e já vem no formato do papel, dentro de um único quadro de texto: tudo o que está dentro dele se copia, e fora dele só há a legenda. `(3)` é o número a circular, junto com a coluna dele; `÷3` vai ao lado da linha pivô; `← (4)` é a seta saindo da linha pivô até a linha, com o 4 circulado; `→ x1 = 9/4` é a leitura do quadro final, saindo do b da linha; e a caixa desenhada é a caixa do resultado. Quando o pivô já é 1, não há quadro só com a linha dividida: as setas vão no próprio quadro do pivô. As contas de fração do item 8 não aparecem, porque os números dos quadros já vêm calculados.
 
 ## 3. Exemplos resolvidos
 
@@ -194,70 +194,57 @@ resolver: primal
 
 Saída do `resolver.py`:
 
-**Método:** Simplex
+**Copie no caderno só o que está dentro do quadro abaixo.** (x) = circule o número e a coluna dele · ÷2 = escreva ao lado da linha · ← (12) = seta saindo da linha do pivô até esta linha, com o 12 circulado.
 
-#### 1. Modelo
-
-```
+```text
 Max Z = 3x1 + 4x2
-2x1 + x2 ≤ 6
-2x1 + 3x2 ≤ 9
-x1, x2 ≥ 0
-```
+{ 2x1 + x2 ≤ 6
+{ 2x1 + 3x2 ≤ 9
+{ x1, x2 ≥ 0
 
-#### 2. Forma padrão
-
-```
 Z - 3x1 - 4x2 = 0
-2x1 + x2 + xf1 = 6
-2x1 + 3x2 + xf2 = 9
+{ 2x1 + x2 + xf1 = 6
+{ 2x1 + 3x2 + xf2 = 9
+
+Z | x1  x2   xf1  xf2 | b
+1 | -3  -4   0    0   | 0
+0 | 2   1    1    0   | 6
+0 | 2   (3)  0    1   | 9   ÷3
+razões: 6/1 = 6   9/3 = 3
+
+Z | x1   x2   xf1  xf2 | b
+1 | -3   -4   0    0   | 0   ← (4)
+0 | 2    1    1    0   | 6   ← (-1)
+0 | 2/3  (1)  0    1/3 | 3
+
+Z | x1     x2  xf1  xf2  | b
+1 | -1/3   0   0    4/3  | 12
+0 | (4/3)  0   1    -1/3 | 3    ÷4/3
+0 | 2/3    1   0    1/3  | 3
+razões: 3 ÷ 4/3 = 9/4 = 2,25   3 ÷ 2/3 = 9/2 = 4,5
+
+Z | x1    x2  xf1  xf2  | b
+1 | -1/3  0   0    4/3  | 12    ← (1/3)
+0 | (1)   0   3/4  -1/4 | 9/4
+0 | 2/3   1   0    1/3  | 3     ← (-2/3)
+
+Z | x1  x2  xf1   xf2  | b
+1 | 0   0   1/4   5/4  | 51/4   → Z = 51/4 = 12,75
+0 | 1   0   3/4   -1/4 | 9/4    → x1 = 9/4 = 2,25
+0 | 0   1   -1/2  1/2  | 3/2    → x2 = 3/2 = 1,5
+linha Z sem negativo → solução ótima
+
+x1 = 9/4 = 2,25
+x2 = 3/2 = 1,5
+
+Z = 3x1 + 4x2
+Z = 3 · 9/4 + 4 · 3/2
+Z = 27/4 + 6
+Z = 27/4 + 24/4
+┌──────────────────┐
+│ Z = 51/4 = 12,75 │
+└──────────────────┘
 ```
-
-#### 3. Quadros
-
-**Quadro 1**
-
-| Linha | Z | x1 | x2 | xf1 | xf2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | -3 | -4 | 0 | 0 | 0 |
-| L1 | 0 | 2 | 1 | 1 | 0 | 6 |
-| L2 | 0 | 2 | **[3]** | 0 | 1 | 9 |
-
-- Coluna pivô: **x2** (o mais negativo da LZ: -4)
-- Razões: L1: 6 ÷ 1 = 6 · L2: 9 ÷ 3 = 3 ← menor
-- Linha pivô: **L2** · Pivô: **3**
-- Operações: L2 ÷ 3; LZ + 4 × L2; L1 - 1 × L2
-
-**Quadro 2**
-
-| Linha | Z | x1 | x2 | xf1 | xf2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | -1/3 | 0 | 0 | 4/3 | 12 |
-| L1 | 0 | **[4/3]** | 0 | 1 | -1/3 | 3 |
-| L2 | 0 | 2/3 | 1 | 0 | 1/3 | 3 |
-
-- Coluna pivô: **x1** (o mais negativo da LZ: -1/3)
-- Razões: L1: 3 ÷ 4/3 = 9/4 = 2,25 ← menor · L2: 3 ÷ 2/3 = 9/2 = 4,5
-- Linha pivô: **L1** · Pivô: **4/3**
-- Operações: L1 ÷ 4/3; LZ + 1/3 × L1; L2 - 2/3 × L1
-
-**Quadro 3**
-
-| Linha | Z | x1 | x2 | xf1 | xf2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | 0 | 0 | 1/4 | 5/4 | 51/4 |
-| L1 | 0 | 1 | 0 | 3/4 | -1/4 | 9/4 |
-| L2 | 0 | 0 | 1 | -1/2 | 1/2 | 3/2 |
-
-A LZ não tem nenhum número negativo → **solução ótima**.
-
-#### 4. Resposta
-
-```
-Z = 3x1 + 4x2 = 3 × 9/4 + 4 × 3/2 = 51/4
-```
-
-**Resposta:** x1 = 9/4 = 2,25; x2 = 3/2 = 1,5; Z = 51/4 = 12,75
 
 ### 3.2 Duas fases: atividade 1 (dual de Max Z = 3x1 + 2x2)
 
@@ -274,121 +261,92 @@ resolver: dual
 
 Saída do `resolver.py`:
 
-**Método:** dual, resolvido por duas fases com a linha -Z1
+**Copie no caderno só o que está dentro do quadro abaixo.** (x) = circule o número e a coluna dele · ÷2 = escreva ao lado da linha · ← (12) = seta saindo da linha do pivô até esta linha, com o 12 circulado.
 
-#### 1. Primal e dual
-
-```
-PRIMAL                    DUAL
+```text
 Max Z = 3x1 + 2x2         Min Z1 = 3y1 + y2 + 3y3
-y1 → 0,5x1 + 0,3x2 ≤ 3    0,5y1 + 0,1y2 + 0,4y3 ≥ 3     (coluna de x1)
-y2 → 0,1x1 + 0,2x2 ≤ 1    0,3y1 + 0,2y2 + 0,5y3 ≥ 2     (coluna de x2)
-y3 → 0,4x1 + 0,5x2 ≤ 3    y1, y2, y3 ≥ 0
-x1, x2 ≥ 0
-```
+{ 0,5x1 + 0,3x2 ≤ 3   →   { 0,5y1 + 0,1y2 + 0,4y3 ≥ 3
+{ 0,1x1 + 0,2x2 ≤ 1       { 0,3y1 + 0,2y2 + 0,5y3 ≥ 2
+{ 0,4x1 + 0,5x2 ≤ 3       { y1, y2, y3 ≥ 0
+{ x1, x2 ≥ 0
 
-#### 2. Forma padrão
+decimais em fração: 0,5 = 1/2; 0,1 = 1/10; 0,4 = 2/5; 0,3 = 3/10; 0,2 = 1/5
 
-Decimais em fração: 0,5 = 1/2; 0,1 = 1/10; 0,4 = 2/5; 0,3 = 3/10; 0,2 = 1/5
-
-```
 -Z1 + 3y1 + y2 + 3y3 = 0
-0,5y1 + 0,1y2 + 0,4y3 - yf1 + a1 = 3
-0,3y1 + 0,2y2 + 0,5y3 - yf2 + a2 = 2
-```
+{ 0,5y1 + 0,1y2 + 0,4y3 - yf1 + a1 = 3
+{ 0,3y1 + 0,2y2 + 0,5y3 - yf2 + a2 = 2
 
-Função auxiliar da Fase 1:
-
-```
 Min W = a1 + a2
 a1 = 3 - 0,5y1 - 0,1y2 - 0,4y3 + yf1
 a2 = 2 - 0,3y1 - 0,2y2 - 0,5y3 + yf2
 W = a1 + a2 = 5 - 0,8y1 - 0,3y2 - 0,9y3 + yf1 + yf2
 -W = -5 + 0,8y1 + 0,3y2 + 0,9y3 - yf1 - yf2
--W - 0,8y1 - 0,3y2 - 0,9y3 + yf1 + yf2 = -5      ← linha LW
+-W - 0,8y1 - 0,3y2 - 0,9y3 + yf1 + yf2 = -5
+
+Fase 1
+
+Z1 | y1    y2     y3     yf1  yf2  a1  a2 | b
+-1 | 3     1      3      0    0    0   0  | 0
+0  | 1/2   1/10   2/5    -1   0    1   0  | 3
+0  | 3/10  1/5    (1/2)  0    -1   0   1  | 2    ÷1/2
+-W | -4/5  -3/10  -9/10  1    1    0   0  | -5
+razões: 3 ÷ 2/5 = 15/2 = 7,5   2 ÷ 1/2 = 4
+
+Z1 | y1    y2     y3     yf1  yf2  a1  a2 | b
+-1 | 3     1      3      0    0    0   0  | 0    ← (-3)
+0  | 1/2   1/10   2/5    -1   0    1   0  | 3    ← (-2/5)
+0  | 3/5   2/5    (1)    0    -2   0   2  | 4
+-W | -4/5  -3/10  -9/10  1    1    0   0  | -5   ← (9/10)
+
+Z1 | y1      y2     y3  yf1  yf2    a1  a2   | b
+-1 | 6/5     -1/5   0   0    6      0   -6   | -12
+0  | 13/50   -3/50  0   -1   (4/5)  1   -4/5 | 7/5    ÷4/5
+0  | 3/5     2/5    1   0    -2     0   2    | 4
+-W | -13/50  3/50   0   1    -4/5   0   9/5  | -7/5
+razões: 7/5 ÷ 4/5 = 7/4 = 1,75
+
+Z1 | y1      y2     y3  yf1   yf2   a1   a2  | b
+-1 | 6/5     -1/5   0   0     6     0    -6  | -12    ← (-6)
+0  | 13/40   -3/40  0   -5/4  (1)   5/4  -1  | 7/4
+0  | 3/5     2/5    1   0     -2    0    2   | 4      ← (2)
+-W | -13/50  3/50   0   1     -4/5  0    9/5 | -7/5   ← (4/5)
+
+Z1 | y1     y2     y3  yf1   yf2  a1     a2 | b
+-1 | -3/4   1/4    0   15/2  0    -15/2  0  | -45/2
+0  | 13/40  -3/40  0   -5/4  1    5/4    -1 | 7/4
+0  | 5/4    1/4    1   -5/2  0    5/2    0  | 15/2
+-W | 0      0      0   0     0    1      1  | 0
+W = 0 → fim da Fase 1
+
+Fase 2 (sem a linha -W e sem as colunas a1, a2)
+
+Z1 | y1       y2     y3  yf1   yf2 | b
+-1 | -3/4     1/4    0   15/2  0   | -45/2
+0  | (13/40)  -3/40  0   -5/4  1   | 7/4     ÷13/40
+0  | 5/4      1/4    1   -5/2  0   | 15/2
+razões: 7/4 ÷ 13/40 = 70/13 ≈ 5,38   15/2 ÷ 5/4 = 6
+
+Z1 | y1    y2     y3  yf1     yf2   | b
+-1 | -3/4  1/4    0   15/2    0     | -45/2   ← (3/4)
+0  | (1)   -3/13  0   -50/13  40/13 | 70/13
+0  | 5/4   1/4    1   -5/2    0     | 15/2    ← (-5/4)
+
+Z1 | y1  y2     y3  yf1     yf2    | b
+-1 | 0   1/13   0   60/13   30/13  | -240/13   → -Z1 = -240/13 → Z1 = 240/13 ≈ 18,46
+0  | 1   -3/13  0   -50/13  40/13  | 70/13     → y1 = 70/13 ≈ 5,38
+0  | 0   7/13   1   30/13   -50/13 | 10/13     → y3 = 10/13 ≈ 0,77
+linha Z1 sem negativo → solução ótima
+
+x1 = 60/13 ≈ 4,62 (linha Z1, coluna yf1)
+x2 = 30/13 ≈ 2,31 (linha Z1, coluna yf2)
+
+Z = 3x1 + 2x2
+Z = 3 · 60/13 + 2 · 30/13
+Z = 180/13 + 60/13
+┌────────────────────┐
+│ Z = 240/13 ≈ 18,46 │
+└────────────────────┘
 ```
-
-#### 3. Quadros do dual
-
-**Fase 1** — entra o mais negativo da LW; coluna de artificial nunca entra.
-
-**Quadro 1**
-
-| Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | a1 | a2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | -1 | 3 | 1 | 3 | 0 | 0 | 0 | 0 | 0 |
-| L1 | 0 | 1/2 | 1/10 | 2/5 | -1 | 0 | 1 | 0 | 3 |
-| L2 | 0 | 3/10 | 1/5 | **[1/2]** | 0 | -1 | 0 | 1 | 2 |
-| LW | 0 | -4/5 | -3/10 | -9/10 | 1 | 1 | 0 | 0 | -5 |
-
-- Coluna pivô: **y3** (o mais negativo da LW: -9/10)
-- Razões: L1: 3 ÷ 2/5 = 15/2 = 7,5 · L2: 2 ÷ 1/2 = 4 ← menor
-- Linha pivô: **L2** · Pivô: **1/2**
-- Operações: L2 ÷ 1/2; LZ - 3 × L2; L1 - 2/5 × L2; LW + 9/10 × L2
-
-**Quadro 2**
-
-| Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | a1 | a2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | -1 | 6/5 | -1/5 | 0 | 0 | 6 | 0 | -6 | -12 |
-| L1 | 0 | 13/50 | -3/50 | 0 | -1 | **[4/5]** | 1 | -4/5 | 7/5 |
-| L2 | 0 | 3/5 | 2/5 | 1 | 0 | -2 | 0 | 2 | 4 |
-| LW | 0 | -13/50 | 3/50 | 0 | 1 | -4/5 | 0 | 9/5 | -7/5 |
-
-- Coluna pivô: **yf2** (o mais negativo da LW: -4/5)
-- Razões: L1: 7/5 ÷ 4/5 = 7/4 = 1,75 ← menor · L2: não entra (-2)
-- Linha pivô: **L1** · Pivô: **4/5**
-- Operações: L1 ÷ 4/5; LZ - 6 × L1; L2 + 2 × L1; LW + 4/5 × L1
-
-**Quadro 3**
-
-| Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | a1 | a2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | -1 | -3/4 | 1/4 | 0 | 15/2 | 0 | -15/2 | 0 | -45/2 |
-| L1 | 0 | 13/40 | -3/40 | 0 | -5/4 | 1 | 5/4 | -1 | 7/4 |
-| L2 | 0 | 5/4 | 1/4 | 1 | -5/2 | 0 | 5/2 | 0 | 15/2 |
-| LW | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 0 |
-
-A LW não tem negativo fora das colunas artificiais e o bn da LW é 0 → W = 0 → **fim da Fase 1**.
-
-**Fase 2** — retiramos a linha LW e as colunas a1, a2; segue com a LZ.
-
-**Quadro 4**
-
-| Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | -1 | -3/4 | 1/4 | 0 | 15/2 | 0 | -45/2 |
-| L1 | 0 | **[13/40]** | -3/40 | 0 | -5/4 | 1 | 7/4 |
-| L2 | 0 | 5/4 | 1/4 | 1 | -5/2 | 0 | 15/2 |
-
-- Coluna pivô: **y1** (o mais negativo da LZ: -3/4)
-- Razões: L1: 7/4 ÷ 13/40 = 70/13 ≈ 5,38 ← menor · L2: 15/2 ÷ 5/4 = 6
-- Linha pivô: **L1** · Pivô: **13/40**
-- Operações: L1 ÷ 13/40; LZ + 3/4 × L1; L2 - 5/4 × L1
-
-**Quadro 5**
-
-| Linha | Z1 | y1 | y2 | y3 | yf1 | yf2 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | -1 | 0 | 1/13 | 0 | 60/13 | 30/13 | -240/13 |
-| L1 | 0 | 1 | -3/13 | 0 | -50/13 | 40/13 | 70/13 |
-| L2 | 0 | 0 | 7/13 | 1 | 30/13 | -50/13 | 10/13 |
-
-A LZ não tem nenhum número negativo → **solução ótima**.
-
-A LZ diz -Z1 = -240/13, logo Z1 = 240/13.
-
-#### 4. Resposta
-
-Primal lido na LZ final do dual: coluna yf1 → x1 = 60/13 · coluna yf2 → x2 = 30/13
-
-```
-Z = 3x1 + 2x2 = 3 × 60/13 + 2 × 30/13 = 240/13
-```
-
-**Resposta:** x1 = 60/13 ≈ 4,62; x2 = 30/13 ≈ 2,31; Z = 240/13 ≈ 18,46
-
-**Dual:** y1 = 70/13 ≈ 5,38; y2 = 0; y3 = 10/13 ≈ 0,77; Z1 = 240/13 ≈ 18,46
 
 O que a foto da atividade 1 tem de diferente:
 
@@ -414,95 +372,79 @@ resolver: dual
 
 Saída do `resolver.py`:
 
-**Método:** dual, resolvido por Simplex
+**Copie no caderno só o que está dentro do quadro abaixo.** (x) = circule o número e a coluna dele · ÷2 = escreva ao lado da linha · ← (12) = seta saindo da linha do pivô até esta linha, com o 12 circulado.
 
-#### 1. Primal e dual
-
-```
-PRIMAL                       DUAL
+```text
 Min Z = 5x1 + 2x2 + x3       Max Z1 = 20y1 + 30y2 + 40y3 + 50y4
-y1 → 2x1 + 3x2 + x3 ≥ 20     2y1 + 6y2 + 7y3 + y4 ≤ 5     (coluna de x1)
-y2 → 6x1 + 8x2 + 5x3 ≥ 30    3y1 + 8y2 + y3 + 2y4 ≤ 2     (coluna de x2)
-y3 → 7x1 + x2 + 3x3 ≥ 40     y1 + 5y2 + 3y3 + 4y4 ≤ 1     (coluna de x3)
-y4 → x1 + 2x2 + 4x3 ≥ 50     y1, y2, y3, y4 ≥ 0
-x1, x2, x3 ≥ 0
-```
+{ 2x1 + 3x2 + x3 ≥ 20    →   { 2y1 + 6y2 + 7y3 + y4 ≤ 5
+{ 6x1 + 8x2 + 5x3 ≥ 30       { 3y1 + 8y2 + y3 + 2y4 ≤ 2
+{ 7x1 + x2 + 3x3 ≥ 40        { y1 + 5y2 + 3y3 + 4y4 ≤ 1
+{ x1 + 2x2 + 4x3 ≥ 50        { y1, y2, y3, y4 ≥ 0
+{ x1, x2, x3 ≥ 0
 
-#### 2. Forma padrão
-
-```
 Z1 - 20y1 - 30y2 - 40y3 - 50y4 = 0
-2y1 + 6y2 + 7y3 + y4 + yf1 = 5
-3y1 + 8y2 + y3 + 2y4 + yf2 = 2
-y1 + 5y2 + 3y3 + 4y4 + yf3 = 1
+{ 2y1 + 6y2 + 7y3 + y4 + yf1 = 5
+{ 3y1 + 8y2 + y3 + 2y4 + yf2 = 2
+{ y1 + 5y2 + 3y3 + 4y4 + yf3 = 1
+
+Z1 | y1   y2   y3   y4   yf1  yf2  yf3 | b
+1  | -20  -30  -40  -50  0    0    0   | 0
+0  | 2    6    7    1    1    0    0   | 5
+0  | 3    8    1    2    0    1    0   | 2
+0  | 1    5    3    (4)  0    0    1   | 1   ÷4
+razões: 5/1 = 5   2/2 = 1   1/4 = 0,25
+
+Z1 | y1   y2   y3   y4   yf1  yf2  yf3 | b
+1  | -20  -30  -40  -50  0    0    0   | 0     ← (50)
+0  | 2    6    7    1    1    0    0   | 5     ← (-1)
+0  | 3    8    1    2    0    1    0   | 2     ← (-2)
+0  | 1/4  5/4  3/4  (1)  0    0    1/4 | 1/4
+
+Z1 | y1     y2    y3    y4  yf1  yf2  yf3  | b
+1  | -15/2  65/2  -5/2  0   0    0    25/2 | 25/2
+0  | 7/4    19/4  25/4  0   1    0    -1/4 | 19/4
+0  | (5/2)  11/2  -1/2  0   0    1    -1/2 | 3/2    ÷5/2
+0  | 1/4    5/4   3/4   1   0    0    1/4  | 1/4
+razões: 19/4 ÷ 7/4 = 19/7 ≈ 2,71   3/2 ÷ 5/2 = 3/5 = 0,6   1/4 ÷ 1/4 = 1
+
+Z1 | y1     y2    y3    y4  yf1  yf2  yf3  | b
+1  | -15/2  65/2  -5/2  0   0    0    25/2 | 25/2   ← (15/2)
+0  | 7/4    19/4  25/4  0   1    0    -1/4 | 19/4   ← (-7/4)
+0  | (1)    11/5  -1/5  0   0    2/5  -1/5 | 3/5
+0  | 1/4    5/4   3/4   1   0    0    1/4  | 1/4    ← (-1/4)
+
+Z1 | y1  y2    y3     y4  yf1  yf2    yf3  | b
+1  | 0   49    -4     0   0    3      11   | 17
+0  | 0   9/10  33/5   0   1    -7/10  1/10 | 37/10
+0  | 1   11/5  -1/5   0   0    2/5    -1/5 | 3/5
+0  | 0   7/10  (4/5)  1   0    -1/10  3/10 | 1/10    ÷4/5
+razões: 37/10 ÷ 33/5 = 37/66 ≈ 0,56   1/10 ÷ 4/5 = 1/8 = 0,125
+
+Z1 | y1  y2    y3    y4   yf1  yf2    yf3  | b
+1  | 0   49    -4    0    0    3      11   | 17      ← (4)
+0  | 0   9/10  33/5  0    1    -7/10  1/10 | 37/10   ← (-33/5)
+0  | 1   11/5  -1/5  0    0    2/5    -1/5 | 3/5     ← (1/5)
+0  | 0   7/8   (1)   5/4  0    -1/8   3/8  | 1/8
+
+Z1 | y1  y2     y3  y4     yf1  yf2   yf3   | b
+1  | 0   105/2  0   5      0    5/2   25/2  | 35/2   → Z1 = 35/2 = 17,5
+0  | 0   -39/8  0   -33/4  1    1/8   -19/8 | 23/8   → yf1 = 23/8 = 2,875
+0  | 1   19/8   0   1/4    0    3/8   -1/8  | 5/8    → y1 = 5/8 = 0,625
+0  | 0   7/8    1   5/4    0    -1/8  3/8   | 1/8    → y3 = 1/8 = 0,125
+linha Z1 sem negativo → solução ótima
+
+x1 = 0 (linha Z1, coluna yf1)
+x2 = 5/2 = 2,5 (linha Z1, coluna yf2)
+x3 = 25/2 = 12,5 (linha Z1, coluna yf3)
+
+Z = 5x1 + 2x2 + x3
+Z = 2 · 5/2 + 25/2
+Z = 5 + 25/2
+Z = 10/2 + 25/2
+┌─────────────────┐
+│ Z = 35/2 = 17,5 │
+└─────────────────┘
 ```
-
-#### 3. Quadros do dual
-
-**Quadro 1**
-
-| Linha | Z1 | y1 | y2 | y3 | y4 | yf1 | yf2 | yf3 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | -20 | -30 | -40 | -50 | 0 | 0 | 0 | 0 |
-| L1 | 0 | 2 | 6 | 7 | 1 | 1 | 0 | 0 | 5 |
-| L2 | 0 | 3 | 8 | 1 | 2 | 0 | 1 | 0 | 2 |
-| L3 | 0 | 1 | 5 | 3 | **[4]** | 0 | 0 | 1 | 1 |
-
-- Coluna pivô: **y4** (o mais negativo da LZ: -50)
-- Razões: L1: 5 ÷ 1 = 5 · L2: 2 ÷ 2 = 1 · L3: 1 ÷ 4 = 1/4 = 0,25 ← menor
-- Linha pivô: **L3** · Pivô: **4**
-- Operações: L3 ÷ 4; LZ + 50 × L3; L1 - 1 × L3; L2 - 2 × L3
-
-**Quadro 2**
-
-| Linha | Z1 | y1 | y2 | y3 | y4 | yf1 | yf2 | yf3 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | -15/2 | 65/2 | -5/2 | 0 | 0 | 0 | 25/2 | 25/2 |
-| L1 | 0 | 7/4 | 19/4 | 25/4 | 0 | 1 | 0 | -1/4 | 19/4 |
-| L2 | 0 | **[5/2]** | 11/2 | -1/2 | 0 | 0 | 1 | -1/2 | 3/2 |
-| L3 | 0 | 1/4 | 5/4 | 3/4 | 1 | 0 | 0 | 1/4 | 1/4 |
-
-- Coluna pivô: **y1** (o mais negativo da LZ: -15/2)
-- Razões: L1: 19/4 ÷ 7/4 = 19/7 ≈ 2,71 · L2: 3/2 ÷ 5/2 = 3/5 = 0,6 ← menor · L3: 1/4 ÷ 1/4 = 1
-- Linha pivô: **L2** · Pivô: **5/2**
-- Operações: L2 ÷ 5/2; LZ + 15/2 × L2; L1 - 7/4 × L2; L3 - 1/4 × L2
-
-**Quadro 3**
-
-| Linha | Z1 | y1 | y2 | y3 | y4 | yf1 | yf2 | yf3 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | 0 | 49 | -4 | 0 | 0 | 3 | 11 | 17 |
-| L1 | 0 | 0 | 9/10 | 33/5 | 0 | 1 | -7/10 | 1/10 | 37/10 |
-| L2 | 0 | 1 | 11/5 | -1/5 | 0 | 0 | 2/5 | -1/5 | 3/5 |
-| L3 | 0 | 0 | 7/10 | **[4/5]** | 1 | 0 | -1/10 | 3/10 | 1/10 |
-
-- Coluna pivô: **y3** (o mais negativo da LZ: -4)
-- Razões: L1: 37/10 ÷ 33/5 = 37/66 ≈ 0,56 · L2: não entra (-1/5) · L3: 1/10 ÷ 4/5 = 1/8 = 0,125 ← menor
-- Linha pivô: **L3** · Pivô: **4/5**
-- Operações: L3 ÷ 4/5; LZ + 4 × L3; L1 - 33/5 × L3; L2 + 1/5 × L3
-
-**Quadro 4**
-
-| Linha | Z1 | y1 | y2 | y3 | y4 | yf1 | yf2 | yf3 | bn |
-|:--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| LZ | 1 | 0 | 105/2 | 0 | 5 | 0 | 5/2 | 25/2 | 35/2 |
-| L1 | 0 | 0 | -39/8 | 0 | -33/4 | 1 | 1/8 | -19/8 | 23/8 |
-| L2 | 0 | 1 | 19/8 | 0 | 1/4 | 0 | 3/8 | -1/8 | 5/8 |
-| L3 | 0 | 0 | 7/8 | 1 | 5/4 | 0 | -1/8 | 3/8 | 1/8 |
-
-A LZ não tem nenhum número negativo → **solução ótima**.
-
-#### 4. Resposta
-
-Primal lido na LZ final do dual: coluna yf1 → x1 = 0 · coluna yf2 → x2 = 5/2 · coluna yf3 → x3 = 25/2
-
-```
-Z = 5x1 + 2x2 + x3 = 5 × 0 + 2 × 5/2 + 1 × 25/2 = 35/2
-```
-
-**Resposta:** x1 = 0; x2 = 5/2 = 2,5; x3 = 25/2 = 12,5; Z = 35/2 = 17,5
-
-**Dual:** y1 = 5/8 = 0,625; y2 = 0; y3 = 1/8 = 0,125; y4 = 0; Z1 = 35/2 = 17,5
 
 O que as fotos da atividade 2 têm de diferente:
 
@@ -525,7 +467,7 @@ x1, x2 >= 0
 resolver: primal
 ```
 
-**Resposta:** x1 = 9/2 = 4,5; x2 = 3/2 = 1,5; Z = 27/2 = 13,5
+**Resultado:** x1 = 9/2 = 4,5; x2 = 3/2 = 1,5; Z = 27/2 = 13,5
 
 O caderno parou no 5º quadro, que ainda tem um negativo na linha Z (coluna xf2; ele escreveu -0,9 e o certo é -3/5). A resposta dele, Z = 10,2 (x1 = 1,2; x2 = 2,6), é um vértice da região, mas não o ótimo. O próprio método gráfico do caderno (p07) dá Z = 13,5.
 
@@ -540,7 +482,7 @@ x1, x2, x3 >= 0
 resolver: primal
 ```
 
-**Resposta:** x1 = 30; x2 = 0; x3 = 0; Z = 60
+**Resultado:** x1 = 30; x2 = 0; x3 = 0; Z = 60
 
 Observação: x2 é não básica e tem 0 na LZ → há outras soluções ótimas com o mesmo Z.
 
@@ -557,7 +499,7 @@ x1, x2 >= 0
 resolver: primal
 ```
 
-**Resposta:** x1 = 500/21 ≈ 23,81; x2 = 225/7 ≈ 32,14; Z = 1775/3 ≈ 591,67
+**Resultado:** x1 = 500/21 ≈ 23,81; x2 = 225/7 ≈ 32,14; Z = 1775/3 ≈ 591,67
 
 O último quadro do caderno (p15) não foi calculado: as restrições foram copiadas do quadro anterior e a linha Z ficou com bn = -2200/7. A 2ª restrição é ≤: na foto da p13 o sinal está mal escrito, e a resolução do caderno na p14 usa folga nessa restrição.
 
@@ -572,7 +514,7 @@ x1, x2, x3 >= 0
 resolver: primal
 ```
 
-**Resposta:** x1 = 0; x2 = 15/2 = 7,5; x3 = 0; Z = 75
+**Resultado:** x1 = 0; x2 = 15/2 = 7,5; x3 = 0; Z = 75
 
 A resposta do caderno está certa, mas a última linha do quadro final está com sinais errados (x3 = -1/2, xf3 = 0 e bn = -5/2; o certo é 1/2, 1 e 5/2). Um bn negativo numa linha de restrição é sempre sinal de erro.
 

@@ -2,17 +2,19 @@
 
 Uso: python3 resolver.py questoes/q1.txt
 
-O formato do arquivo da questão está no prompt.md. A saída é a resolução enxuta em
-Markdown, só o que se copia: modelo, forma padrão, um quadro por iteração (com pivô,
-razões e operações) e resposta. As contas e a conferência são feitas por dentro.
+O formato do arquivo da questão está no prompt.md. A saída é uma legenda e um único
+quadro de texto com o que se copia no caderno, no formato das atividades: modelo, forma
+padrão, dois quadros por iteração (o do pivô e o da linha pivô dividida, com as setas),
+leitura do quadro final e Z por substituição na caixa. A conferência roda por dentro.
 Quando o caso não é coberto, o resolver para com uma mensagem de erro (código 1).
 """
 import re
 import sys
 from dataclasses import dataclass, field
 from fractions import Fraction
+from math import lcm
 
-MODOS = ("primal", "dual", "ambos", "montar_dual")
+MODOS = ("primal", "dual", "ambos", "montar_dual", "modelo")
 MAX_PIVOS = 50
 SIMBOLO = {"<=": "≤", ">=": "≥", "=": "="}
 INVERSO = {"<=": ">=", ">=": "<=", "=": "="}
@@ -88,14 +90,6 @@ def expressao(coefs, nomes, usa_decimal, constante=None):
     return " ".join(partes) if partes else "0"
 
 
-def substituicao(coefs, nomes, valores, usa_decimal):
-    """'3 × 9/4 + 4 × 3/2 = 51/4' (os valores vêm do dicionário)."""
-    termos = [(a, valores[n]) for a, n in zip(coefs, nomes) if a != 0]
-    texto = " + ".join(f"{num(a, usa_decimal) if i == 0 or a > 0 else '(' + num(a, usa_decimal) + ')'} × {fp(v)}"
-                       for i, (a, v) in enumerate(termos))
-    return f"{texto} = {fr(sum((a * v for a, v in termos), Fraction(0)))}"
-
-
 # ---------- leitura do arquivo da questão ----------
 
 @dataclass
@@ -106,10 +100,11 @@ class Problema:
     A: list                 # A[i][j]: coeficiente da variável j na restrição i
     ops: list               # "<=", ">=" ou "="
     b: list                 # lados direitos
-    modo: str               # "primal", "dual", "ambos" ou "montar_dual"
+    modo: str               # "primal", "dual", "ambos", "montar_dual" ou "modelo"
     nome: str = "Z"         # Z no problema dado, Z1 no dual
     usa_decimal: bool = False
     sinais: list = None     # só no dual montado: ">=0", "<=0" ou "livre" para cada variável
+    descricoes: dict = field(default_factory=dict)   # "x1" -> "quantidade do produto 1"
 
     @property
     def letra(self):
@@ -149,10 +144,16 @@ def _expressao(texto, n):
 
 def ler(texto):
     """Lê o arquivo da questão (formato no prompt.md) e devolve o Problema."""
-    objetivo, modo, restricoes, sinais, usa_decimal = None, None, [], set(), False
+    objetivo, modo, restricoes, sinais, usa_decimal, descricoes = None, None, [], set(), False, {}
     for n, bruta in enumerate(texto.splitlines(), 1):
         linha = bruta.split("#")[0].strip()
         if not linha:
+            continue
+        m = re.fullmatch(r"([a-z]\d+)\s*:\s*(.+)", linha)
+        if m:  # descrição da variável: texto livre, pode ter ponto e vírgula
+            if m.group(1) in descricoes:
+                raise ErroEntrada(f"linha {n}: {m.group(1)} tem duas descrições")
+            descricoes[m.group(1)] = m.group(2)
             continue
         if "." in linha:
             raise ErroEntrada(f"linha {n}: use vírgula para decimal e não use ponto (nem como separador de milhar)")
@@ -168,7 +169,7 @@ def ler(texto):
             if modo is not None:
                 raise ErroEntrada(f"linha {n}: 'resolver:' aparece duas vezes")
             if m.group(1) not in MODOS:
-                raise ErroEntrada(f"linha {n}: o modo deve ser primal, dual, ambos ou montar_dual")
+                raise ErroEntrada(f"linha {n}: o modo deve ser primal, dual, ambos, montar_dual ou modelo")
             modo = m.group(1)
             continue
         m = re.fullmatch(r"(.+?)\s*(<=|>=|≤|≥|=)\s*(.+)", linha)
@@ -187,7 +188,7 @@ def ler(texto):
     if objetivo is None:
         raise ErroEntrada("falta a linha 'max Z = ...' ou 'min Z = ...'")
     if modo is None:
-        raise ErroEntrada("falta a linha 'resolver: primal' (ou dual, ambos, montar_dual)")
+        raise ErroEntrada("falta a linha 'resolver: primal' (ou dual, ambos, montar_dual, modelo)")
     if not restricoes:
         raise ErroEntrada("não há restrições")
     nomes = set(objetivo[1]).union(*(t for t, _, _ in restricoes))
@@ -201,6 +202,13 @@ def ler(texto):
     if sobram:
         raise ErroEntrada(f"{', '.join(sobram)} está na condição de sinal, mas não aparece no problema")
     variaveis = sorted(nomes, key=lambda v: int(v[1:]))
+    if descricoes:
+        sobram = sorted(set(descricoes) - nomes)
+        if sobram:
+            raise ErroEntrada(f"{', '.join(sobram)} tem descrição, mas não aparece no problema")
+        faltam = [v for v in variaveis if v not in descricoes]
+        if faltam:
+            raise ErroEntrada(f"falta a descrição de {', '.join(faltam)} (descreva todas as variáveis ou nenhuma)")
     return Problema(
         sentido=objetivo[0],
         variaveis=variaveis,
@@ -210,6 +218,7 @@ def ler(texto):
         b=[b for _, _, b in restricoes],
         modo=modo,
         usa_decimal=usa_decimal,
+        descricoes={v: descricoes[v] for v in variaveis} if descricoes else {},
     )
 
 
@@ -273,13 +282,20 @@ class _Tabela:
     def quadro(self):
         return Quadro(list(self.colunas), {r: list(v) for r, v in self.linhas.items()})
 
-    def markdown(self, piv=None):
-        cab = ["Linha", self.nome_z] + self.colunas + ["bn"]
-        out = ["| " + " | ".join(cab) + " |", "|" + "|".join([":--"] + [":-:"] * (len(cab) - 1)) + "|"]
+    def texto(self, marca=None, notas=None):
+        """O quadro como no papel, sem rótulos de linha: (x) no número a circular e a nota de cada linha à direita."""
+        notas = notas or {}
+        tabela = [[self.nome_z] + self.colunas + ["b"]]
         for rot, v in self.linhas.items():
-            cel = [rot] + [f"**[{fr(x)}]**" if piv == (rot, j) else fr(x) for j, x in enumerate(v)]
-            out.append("| " + " | ".join(cel) + " |")
-        return "\n".join(out)
+            tabela.append(["-W" if rot == "LW" else fr(v[0])]
+                          + [f"({fr(x)})" if marca == (rot, j) else fr(x) for j, x in enumerate(v[1:], 1)])
+        larg = [max(len(lin[c]) for lin in tabela) for c in range(len(tabela[0]))]
+        out = []
+        for lin, rot in zip(tabela, [None] + list(self.linhas)):
+            cel = [x.ljust(w) for x, w in zip(lin, larg)]
+            s = f"{cel[0]} | {'  '.join(cel[1:-1])} | {cel[-1]}" + (f"   {notas[rot]}" if rot in notas else "")
+            out.append(s.rstrip())
+        return out
 
     def sem_artificiais(self):
         manter = [j for j, c in enumerate(self.colunas) if c not in self.artificiais]
@@ -287,67 +303,63 @@ class _Tabela:
         return _Tabela(self.nome_z, [self.colunas[j] for j in manter], linhas, dict(self.base))
 
 
-def _imprimir(t, k, res, piv=None):
-    res.texto += [f"**Quadro {k}**", "", t.markdown(piv), ""]
+def _quadro(t, res, marca=None, notas=None, abaixo=()):
+    res.texto += t.texto(marca, notas) + list(abaixo) + [""]
     res.quadros.append(t.quadro())
 
 
-def _pivotear(t, lp, jj, fase, res, k, txt):
-    """Quadro k com o pivô marcado e as operações da iteração. Devolve o número do próximo quadro."""
+def _razao(b, e):
+    """'9/3 = 3', '5/2 = 2,5', '3 ÷ 4/3 = 9/4 = 2,25'."""
+    conta = f"{fr(b)}/{fr(e)}" if b.denominator == e.denominator == 1 else f"{fr(b)} ÷ {fr(e)}"
+    valor = valor_com_decimal(b / e)
+    return valor if valor.startswith(conta + " ") else f"{conta} = {valor}"
+
+
+def _pivotear(t, lp, jj, fase, res, abaixo):
+    """Quadro do pivô (÷ ao lado da linha pivô) e quadro da linha pivô dividida (com as setas).
+
+    Com pivô 1 não há o que dividir: as setas vão no próprio quadro do pivô."""
     col, piv = t.colunas[jj - 1], t.linhas[lp][jj]
-    _imprimir(t, k, res, (lp, jj))
     res.pivos.append((fase, col, lp))
-    ops = [] if piv == 1 else [f"{lp} ÷ {fp(piv)}"]
-    t.linhas[lp] = [v / piv for v in t.linhas[lp]]
-    nova = t.linhas[lp]
-    for r, v in t.linhas.items():
-        m = -v[jj]
-        if r == lp or m == 0:
-            continue
-        ops.append(f"{r} {'+' if m > 0 else '-'} {fr(abs(m))} × {lp}")
-        t.linhas[r] = [a + m * p for a, p in zip(v, nova)]
-    res.texto += txt + [f"- Operações: {'; '.join(ops)}", ""]
+    mult = {r: -v[jj] for r, v in t.linhas.items() if r != lp and v[jj] != 0}
+    setas = {r: f"← ({fr(m)})" for r, m in mult.items()}
+    if piv == 1:
+        _quadro(t, res, (lp, jj), setas, abaixo)
+    else:
+        _quadro(t, res, (lp, jj), {lp: f"÷{fp(piv)}"}, abaixo)
+        t.linhas[lp] = [v / piv for v in t.linhas[lp]]
+        _quadro(t, res, (lp, jj), setas)
+    for r, m in mult.items():
+        t.linhas[r] = [a + m * p for a, p in zip(t.linhas[r], t.linhas[lp])]
     t.base[lp] = col
-    return k + 1
 
 
-def _iterar(t, obj, fase, res, k):
-    """Pivoteia até a linha obj (LZ ou LW) não ter negativo. Devolve (próximo quadro, status)."""
+def _iterar(t, obj, fase, res):
+    """Pivoteia até a linha obj (LZ ou LW) não ter negativo. Devolve "otimo" ou "ilimitado"."""
     for _ in range(MAX_PIVOS):
         linha_obj = t.linhas[obj]
         cand = [(linha_obj[1 + j], j) for j, c in enumerate(t.colunas) if c not in t.artificiais and linha_obj[1 + j] < 0]
         if not cand:
-            return k, "otimo"
-        valor, j = min(cand)  # o mais negativo; empate: a coluna mais à esquerda
+            return "otimo"
+        _, j = min(cand)  # o mais negativo; empate: a coluna mais à esquerda
         col, jj = t.colunas[j], 1 + j
-        txt = [f"- Coluna pivô: **{col}** (o mais negativo da {obj}: {fr(valor)})"]
         razoes = [(t.linhas[r][-1] / t.linhas[r][jj], r) for r in t.restricoes() if t.linhas[r][jj] > 0]
         if not razoes:
-            _imprimir(t, k, res)
-            res.texto += [txt[0], f"- A coluna {col} não tem nenhum elemento positivo nas restrições → "
-                                  f"**o problema é ilimitado** ({t.nome_z} cresce sem limite).", ""]
-            return k, "ilimitado"
+            _quadro(t, res, abaixo=[f"coluna {col}: nenhum número positivo → problema ilimitado"])
+            return "ilimitado"
         menor = min(q for q, _ in razoes)
         empate = [r for q, r in razoes if q == menor]
         lp = empate[0]  # empate: a linha mais acima
-        partes = []
-        for r in t.restricoes():
-            e, b = t.linhas[r][jj], t.linhas[r][-1]
-            if e > 0:
-                partes.append(f"{r}: {fr(b)} ÷ {fr(e)} = {valor_com_decimal(b / e)}" + (" ← menor" if r == lp else ""))
-            else:
-                partes.append(f"{r}: não entra ({fr(e)})")
-        txt.append(f"- Razões: {' · '.join(partes)}")
+        abaixo = ["razões: " + "   ".join(_razao(t.linhas[r][-1], t.linhas[r][jj]) for _, r in razoes)]
         if len(empate) > 1:
             res.degenerado = True
-            txt.append(f"- Empate na menor razão: fica a linha mais acima ({lp}); a solução é degenerada.")
-        txt.append(f"- Linha pivô: **{lp}** · Pivô: **{fr(t.linhas[lp][jj])}**")
-        k = _pivotear(t, lp, jj, fase, res, k, txt)
+            abaixo.append("empate na menor razão: fica a linha de cima (solução degenerada)")
+        _pivotear(t, lp, jj, fase, res, abaixo)
     raise ErroResolver(f"mais de {MAX_PIVOS} pivoteamentos.")
 
 
-def _tirar_artificiais(t, res, k):
-    """Fim da Fase 1 com W = 0: artificial que ficou na base sai por pivoteamento. Devolve o próximo quadro."""
+def _tirar_artificiais(t, res):
+    """Fim da Fase 1 com W = 0: artificial que ficou na base sai por pivoteamento."""
     while True:
         alvo = None
         for lin, col in t.base.items():
@@ -358,14 +370,11 @@ def _tirar_artificiais(t, res, k):
                     alvo = (lin, col, jj)
                     break
         if alvo is None:
-            return k
+            return
         lin, col, jj = alvo
-        txt = [f"- A LW não tem negativo fora das colunas artificiais e W = 0, mas a artificial {col} ficou na base "
-               f"({lin}) com valor 0. Ela sai por um pivoteamento na primeira coluna não artificial com elemento "
-               f"diferente de 0 nessa linha: **{t.colunas[jj - 1]}**.",
-               f"- Linha pivô: **{lin}** · Pivô: **{fr(t.linhas[lin][jj])}** "
-               f"(o bn dessa linha é 0, então aqui o pivô pode ser negativo)"]
-        k = _pivotear(t, lin, jj, "fase 1", res, k, txt)
+        abaixo = [f"{col} ficou na base com valor 0: sai pela coluna {t.colunas[jj - 1]} "
+                  f"(com b = 0, o pivô pode ser negativo)"]
+        _pivotear(t, lin, jj, "fase 1", res, abaixo)
 
 
 def _montar(p, res):
@@ -452,7 +461,7 @@ def _algebra_w(p, normais, folga, artificial, lw):
     menos = "".join(f" - {e}" for e in excessos)
     out.append(f"W = {soma_a} = {expressao(somas, nomes, d, constante=total_b)}{mais}")
     out.append(f"-W = {expressao([-v for v in somas], nomes, d, constante=-total_b)}{menos}")
-    out.append(f"-W {_continuar(expressao(somas, nomes, d))}{mais} = {num(-total_b, d)}      ← linha LW")
+    out.append(f"-W {_continuar(expressao(somas, nomes, d))}{mais} = {num(-total_b, d)}")
     return out
 
 
@@ -460,39 +469,27 @@ def resolver_problema(p):
     """Resolve o problema como foi dado (Simplex ou duas fases) e devolve o Resultado."""
     res = Resultado()
     t = _montar(p, res)
-    k = 1
     fase = "simplex"
     if "LW" in t.linhas:
-        res.texto += ["**Fase 1** — entra o mais negativo da LW; coluna de artificial nunca entra.", ""]
-        k, _ = _iterar(t, "LW", "fase 1", res, k)
+        res.texto += ["Fase 1", ""]
+        _iterar(t, "LW", "fase 1", res)
         res.w = -t.linhas["LW"][-1]
         if res.w != 0:
-            _imprimir(t, k, res)
             res.status = "inviavel"
-            res.texto += [f"A LW não tem negativo fora das colunas artificiais, mas o bn da LW é {fr(-res.w)} → "
-                          f"W = {fr(res.w)} > 0 → **o problema não tem solução viável**.", ""]
+            _quadro(t, res, abaixo=[f"linha -W sem negativo e W = {fr(res.w)} > 0 → problema sem solução viável"])
             return res
-        k_antes = k
-        k = _tirar_artificiais(t, res, k)
-        _imprimir(t, k, res)
-        if k == k_antes:
-            res.texto += ["A LW não tem negativo fora das colunas artificiais e o bn da LW é 0 → W = 0 → **fim da Fase 1**.", ""]
-        else:
-            res.texto += ["O bn da LW continua 0 → W = 0 → **fim da Fase 1**.", ""]
+        _tirar_artificiais(t, res)
+        _quadro(t, res, abaixo=["W = 0 → fim da Fase 1"])
         for lin in [lin for lin, col in t.base.items() if col in t.artificiais]:
-            res.texto += [f"A artificial {t.base[lin]} ficou na base ({lin}) e essa linha só tem zeros fora das colunas "
-                          f"artificiais: a restrição {lin[1:]} é redundante e a linha {lin} sai do quadro.", ""]
+            res.texto += [f"{t.base[lin]} ficou na base numa linha só com zeros fora das artificiais: "
+                          f"a restrição {lin[1:]} é redundante e essa linha sai do quadro", ""]
             del t.linhas[lin], t.base[lin]
-        res.texto += [f"**Fase 2** — retiramos a linha LW e as colunas {', '.join(res.artificiais)}; segue com a LZ.", ""]
+        res.texto += [f"Fase 2 (sem a linha -W e sem as colunas {', '.join(res.artificiais)})", ""]
         t = t.sem_artificiais()
-        k += 1
         fase = "fase 2"
-    k, status = _iterar(t, "LZ", fase, res, k)
-    if status == "ilimitado":
+    if _iterar(t, "LZ", fase, res) == "ilimitado":
         res.status = "ilimitado"
         return res
-    _imprimir(t, k, res)
-    res.texto += ["A LZ não tem nenhum número negativo → **solução ótima**.", ""]
 
     res.base = dict(t.base)
     res.valores = {c: Fraction(0) for c in t.colunas}
@@ -509,6 +506,15 @@ def resolver_problema(p):
             res.otimos_multiplos, res.alternativa = True, c
             break
     _conferir(p, {v: res.valores[v] for v in p.variaveis}, res.z)
+
+    nome = p.nome
+    notas = {"LZ": f"→ {nome} = {valor_com_decimal(bn)}" if p.sentido == "max"
+             else f"→ -{nome} = {fr(bn)} → {nome} = {valor_com_decimal(res.z)}"}
+    notas.update({r: f"→ {c} = {valor_com_decimal(res.valores[c])}" for r, c in t.base.items()})
+    abaixo = [f"linha {nome} sem negativo → solução ótima"]
+    if res.otimos_multiplos:
+        abaixo.append(f"{res.alternativa} não básica com 0 na linha {nome} → há outras soluções ótimas com o mesmo {nome}")
+    _quadro(t, res, notas=notas, abaixo=abaixo)
     return res
 
 
@@ -547,12 +553,15 @@ def resolver_pelo_dual(p):
     return ResultadoDual(d, res, x, res.z, "otimo")
 
 
-# ---------- saída em Markdown ----------
+# ---------- saída: o que se copia no caderno ----------
 
-def _metodo(r, p):
-    """'Simplex', 'duas fases com a linha -Z', ..."""
-    nome = "duas fases" if r.artificiais else "Simplex"
-    return nome + (f" com a linha -{p.nome}" if p.sentido == "min" else "")
+LEGENDA = ("**Copie no caderno só o que está dentro do quadro abaixo.** (x) = circule o número e a coluna dele · "
+           "÷2 = escreva ao lado da linha · ← (12) = seta saindo da linha do pivô até esta linha, com o 12 circulado.")
+
+
+def _com_chave(linhas):
+    """A primeira linha solta e as outras com a chave: '{ 2x1 + x2 ≤ 6'."""
+    return linhas[:1] + [f"{{ {linha}" for linha in linhas[1:]]
 
 
 def _linhas_modelo(p):
@@ -576,123 +585,126 @@ def _decimais(p):
     return "; ".join(f"{decimal(v)} = {fr(v)}" for v in vistos)
 
 
-def _bloco(linhas):
-    return ["```"] + linhas + ["```"]
-
-
-def _secoes_resolucao(p, r, n0, titulo_quadros="Quadros"):
-    """Forma padrão e quadros (seções n0 e n0 + 1). Devolve as linhas."""
-    out = [f"### {n0}. Forma padrão", ""]
+def _secoes(p, r):
+    """Decimais, forma padrão, função auxiliar e quadros de um problema resolvido."""
+    out = []
     decimais = _decimais(p) if p.usa_decimal else ""
     if decimais:
-        out += [f"Decimais em fração: {decimais}", ""]
-    out += [f"{nota}" for nota in r.notas] + ([""] if r.notas else [])
-    out += _bloco(r.forma_padrao) + [""]
+        out += [f"decimais em fração: {decimais}", ""]
+    if r.notas:
+        out += r.notas + [""]
+    out += _com_chave(r.forma_padrao) + [""]
     if r.algebra_w:
-        out += ["Função auxiliar da Fase 1:", ""] + _bloco(r.algebra_w) + [""]
-    out += [f"### {n0 + 1}. {titulo_quadros}", ""] + r.texto
-    if r.status != "otimo":
-        return out
-    if p.sentido == "min":
-        out += [f"A LZ diz -{p.nome} = {fr(-r.z)}, logo {p.nome} = {fr(r.z)}.", ""]
-    if r.otimos_multiplos:
-        out += [f"Observação: {r.alternativa} é não básica e tem 0 na LZ → há outras soluções ótimas "
-                f"com o mesmo {p.nome}.", ""]
-    return out
+        out += r.algebra_w + [""]
+    return out + r.texto
 
 
-def _linha_substituicao(p, x):
-    """'Z = 3x1 + 4x2 = 3 × 9/4 + 4 × 3/2 = 51/4'."""
-    return f"{p.nome} = {expressao(p.c, p.variaveis, p.usa_decimal)} = {substituicao(p.c, p.variaveis, x, p.usa_decimal)}"
+def _sinal(i, negativo):
+    """Sinal do i-ésimo termo de uma soma: '-' ou nada no primeiro, ' - ' ou ' + ' nos outros."""
+    if i == 0:
+        return "-" if negativo else ""
+    return " - " if negativo else " + "
 
 
-def _resposta(p, valores, z):
-    partes = "; ".join(f"{v} = {valor_com_decimal(valores[v])}" for v in p.variaveis)
-    return f"{partes}; {p.nome} = {valor_com_decimal(z)}"
+def _soma(valores, texto):
+    """'27/4 + 6': os termos com o sinal de cada um; texto(v) escreve o valor absoluto do termo."""
+    return "".join(_sinal(i, v < 0) + texto(abs(v)) for i, v in enumerate(valores))
+
+
+def _caixa(texto):
+    return ["┌" + "─" * (len(texto) + 2) + "┐", f"│ {texto} │", "└" + "─" * (len(texto) + 2) + "┘"]
+
+
+def _substituicao(p, x, z):
+    """Z por substituição, uma conta por linha, e o resultado na caixa (como nas atividades)."""
+    d, nome = p.usa_decimal, p.nome
+    out = [f"{nome} = {expressao(p.c, p.variaveis, d)}"]
+    termos = [(a, x[v]) for a, v in zip(p.c, p.variaveis) if a != 0 and x[v] != 0]
+    if termos:
+        out.append(f"{nome} = " + "".join(_sinal(i, a < 0) + (fr(v) if abs(a) == 1 else f"{num(abs(a), d)} · {fr(v)}")
+                                          for i, (a, v) in enumerate(termos)))
+        produtos = [a * v for a, v in termos]
+        if any(abs(a) != 1 for a, _ in termos):
+            out.append(f"{nome} = {_soma(produtos, fr)}")
+        den = lcm(*[q.denominator for q in produtos])
+        if len(produtos) > 1 and den > 1 and any(q.denominator != den for q in produtos):
+            out.append(f"{nome} = {_soma(produtos, lambda q: f'{int(q * den)}/{den}')}")
+    return out + _caixa(f"{nome} = {valor_com_decimal(z)}")
 
 
 def _texto_status(status):
-    return {"ilimitado": "o problema é ilimitado (Z cresce sem limite); não há solução ótima.",
-            "inviavel": "o problema não tem solução viável."}[status]
+    return {"ilimitado": "problema ilimitado: não há solução ótima",
+            "inviavel": "problema sem solução viável"}[status]
 
 
-def _texto_primal(p):
+def _linhas_primal(p):
     r = resolver_problema(p)
-    metodo = _metodo(r, p)
-    out = [f"**Método:** {metodo[0].upper()}{metodo[1:]}", "", "### 1. Modelo", ""] + _bloco(_linhas_modelo(p)) + [""]
-    out += _secoes_resolucao(p, r, 2) + ["### 4. Resposta", ""]
+    out = _com_chave(_linhas_modelo(p)) + [""] + _secoes(p, r)
     if r.status != "otimo":
-        return "\n".join(out + [f"**Resposta:** {_texto_status(r.status)}", ""])
+        return out + _caixa(_texto_status(r.status))
     x = {v: r.valores[v] for v in p.variaveis}
-    out += _bloco([_linha_substituicao(p, x)]) + ["", f"**Resposta:** {_resposta(p, x, r.z)}", ""]
-    return "\n".join(out)
+    out += [f"{v} = {valor_com_decimal(x[v])}" for v in p.variaveis] + [""]
+    return out + _substituicao(p, x, r.z)
 
 
 def _lado_a_lado(p, d):
-    mp, md = _linhas_modelo(p), _linhas_modelo(d)
-    esq = ["PRIMAL", mp[0]] + [f"{y} → {linha}" for y, linha in zip(d.variaveis, mp[1:-1])] + [mp[-1]]
-    dir_ = ["DUAL", md[0]] + [f"{linha}     (coluna de {x})" for x, linha in zip(p.variaveis, md[1:-1])] + [md[-1]]
-    largura = max(len(s) for s in esq) + 4
+    """Primal → dual, cada um com a sua chave, como nas atividades."""
+    esq, dir_ = _com_chave(_linhas_modelo(p)), _com_chave(_linhas_modelo(d))
     total = max(len(esq), len(dir_))
     esq += [""] * (total - len(esq))
     dir_ += [""] * (total - len(dir_))
-    return [f"{a.ljust(largura)}{b}".rstrip() for a, b in zip(esq, dir_)]
+    largura = max(len(s) for s in esq)
+    return [f"{a.ljust(largura)}   {'→' if i == 1 else ' '}   {b}".rstrip() for i, (a, b) in enumerate(zip(esq, dir_))]
 
 
 def _texto_sinais(p, d):
-    """Explica os sinais das variáveis duais quando o primal não está na forma padrão."""
+    """Os sinais das variáveis duais quando o primal não está na forma padrão."""
     if all(s == ">=0" for s in d.sinais):
         return []
     tipo = "Max" if p.sentido == "max" else "Min"
-    partes = []
+    out = ["sinais do dual:"]
     for i, (y, op, s) in enumerate(zip(d.variaveis, p.ops, d.sinais), 1):
         sinal = {">=0": "≥ 0", "<=0": "≤ 0", "livre": "livre"}[s]
-        partes.append(f"- {y} {sinal}: a restrição {i} do primal é {SIMBOLO[op]} num {tipo}")
-    return ["Sinais das variáveis do dual (tabela da referência 2.6):", ""] + partes + [""]
+        out.append(f"{y} {sinal}: a restrição {i} do primal é {SIMBOLO[op]} num {tipo}")
+    return out
 
 
-def _texto_montar_dual(p):
-    d = montar_dual(p)
-    out = ["**Método:** montar o dual", "", "### 1. Primal e dual", ""] + _bloco(_lado_a_lado(p, d)) + [""]
-    return "\n".join(out + _texto_sinais(p, d))
-
-
-def _texto_dual(p):
+def _linhas_dual(p):
     rd = resolver_pelo_dual(p)
     d, r = rd.dual, rd.resultado
-    out = [f"**Método:** dual, resolvido por {_metodo(r, d)}", "", "### 1. Primal e dual", ""]
-    out += _bloco(_lado_a_lado(p, d)) + [""]
-    out += _secoes_resolucao(d, r, 2, titulo_quadros="Quadros do dual") + ["### 4. Resposta", ""]
+    out = _lado_a_lado(p, d) + [""] + _secoes(d, r)
     if r.status != "otimo":
-        texto = ("o dual é ilimitado, então o primal não tem solução viável." if r.status == "ilimitado"
-                 else "o dual não tem solução viável e o primal "
-                 + ("é ilimitado." if rd.status_primal == "ilimitado" else "também não tem solução viável."))
-        return "\n".join(out + [f"**Resposta:** {texto}", ""])
-    y = {v: r.valores[v] for v in d.variaveis}
-    lidos = " · ".join(f"coluna {d.letra}f{j} → {v} = {fr(rd.x[v])}" for j, v in enumerate(p.variaveis, 1))
-    out += [f"Primal lido na LZ final do dual: {lidos}", ""]
-    out += _bloco([_linha_substituicao(p, rd.x)]) + [""]
-    out += [f"**Resposta:** {_resposta(p, rd.x, rd.z)}", "", f"**Dual:** {_resposta(d, y, r.z)}", ""]
-    return "\n".join(out)
+        return out + _caixa("dual ilimitado → primal sem solução viável" if r.status == "ilimitado"
+                            else "dual sem solução viável → primal "
+                            + ("ilimitado" if rd.status_primal == "ilimitado" else "sem solução viável"))
+    out += [f"{v} = {valor_com_decimal(rd.x[v])} (linha {d.nome}, coluna {d.letra}f{j})"
+            for j, v in enumerate(p.variaveis, 1)] + [""]
+    return out + _substituicao(p, rd.x, rd.z)
 
 
 def gerar_saida(p):
-    """A resolução completa em Markdown, conforme o modo pedido no arquivo."""
-    if p.modo == "primal":
-        return _texto_primal(p)
-    if p.modo == "montar_dual":
-        return _texto_montar_dual(p)
-    if p.modo == "dual":
-        return _texto_dual(p)
-    rp, rd = resolver_problema(p), resolver_pelo_dual(p)
-    if rp.status == "otimo" and rd.status_primal == "otimo":
-        if rp.z != rd.z:
-            raise ErroResolver("erro interno: o Z do primal e o Z1 do dual são diferentes.")
-        comparacao = f"- Z do primal (Parte A) = Z1 do dual (Parte B) = {valor_com_decimal(rp.z)} ✓"
+    """A legenda e um único quadro de texto com tudo o que se copia no caderno, conforme o modo pedido."""
+    if p.modo == "modelo":
+        linhas = _com_chave(_linhas_modelo(p))
+    elif p.modo == "primal":
+        linhas = _linhas_primal(p)
+    elif p.modo == "montar_dual":
+        d = montar_dual(p)
+        linhas = _lado_a_lado(p, d) + [""] + _texto_sinais(p, d)
+    elif p.modo == "dual":
+        linhas = _linhas_dual(p)
     else:
-        comparacao = "- Não há solução ótima (ver as respostas das partes A e B)."
-    return "\n".join(["## Parte A — primal", "", _texto_primal(p), "## Parte B — dual", "", _texto_dual(p),
-                      "## Comparação", "", comparacao, ""])
+        rp, rd = resolver_problema(p), resolver_pelo_dual(p)
+        linhas = ["A) PRIMAL", ""] + _linhas_primal(p) + ["", "B) DUAL", ""] + _linhas_dual(p)
+        if rp.status == "otimo" and rd.status_primal == "otimo":
+            if rp.z != rd.z:
+                raise ErroResolver("erro interno: o Z do primal e o Z1 do dual são diferentes.")
+            linhas += ["", f"Z (primal) = Z1 (dual) = {valor_com_decimal(rp.z)}"]
+    if p.descricoes:
+        linhas = [f"{v} = {texto}" for v, texto in p.descricoes.items()] + [""] + linhas
+    while linhas and not linhas[-1]:
+        linhas.pop()
+    return "\n".join([LEGENDA, "", "```text"] + linhas + ["```", ""])
 
 
 def main(argv):

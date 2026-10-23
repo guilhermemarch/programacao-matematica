@@ -1,5 +1,6 @@
 """Testes do resolver.py. Rodar: python3 testes.py"""
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -89,6 +90,57 @@ x1 + 2x2 >= 12
 x1, x2 >= 0
 resolver: dual
 """
+SAIDA_Q1 = """**Copie no caderno só o que está dentro do quadro abaixo.** (x) = circule o número e a coluna dele · ÷2 = escreva ao lado da linha · ← (12) = seta saindo da linha do pivô até esta linha, com o 12 circulado.
+
+```text
+Min Z = 5x1 + 4x2       Max Z1 = 12y1 + 12y2
+{ 2x1 + x2 ≥ 12     →   { 2y1 + y2 ≤ 5
+{ x1 + 2x2 ≥ 12         { y1 + 2y2 ≤ 4
+{ x1, x2 ≥ 0            { y1, y2 ≥ 0
+
+Z1 - 12y1 - 12y2 = 0
+{ 2y1 + y2 + yf1 = 5
+{ y1 + 2y2 + yf2 = 4
+
+Z1 | y1   y2   yf1  yf2 | b
+1  | -12  -12  0    0   | 0
+0  | (2)  1    1    0   | 5   ÷2
+0  | 1    2    0    1   | 4
+razões: 5/2 = 2,5   4/1 = 4
+
+Z1 | y1   y2   yf1  yf2 | b
+1  | -12  -12  0    0   | 0     ← (12)
+0  | (1)  1/2  1/2  0   | 5/2
+0  | 1    2    0    1   | 4     ← (-1)
+
+Z1 | y1  y2     yf1   yf2 | b
+1  | 0   -6     6     0   | 30
+0  | 1   1/2    1/2   0   | 5/2
+0  | 0   (3/2)  -1/2  1   | 3/2   ÷3/2
+razões: 5/2 ÷ 1/2 = 5   3/2 ÷ 3/2 = 1
+
+Z1 | y1  y2   yf1   yf2 | b
+1  | 0   -6   6     0   | 30    ← (6)
+0  | 1   1/2  1/2   0   | 5/2   ← (-1/2)
+0  | 0   (1)  -1/3  2/3 | 1
+
+Z1 | y1  y2  yf1   yf2  | b
+1  | 0   0   4     4    | 36   → Z1 = 36
+0  | 1   0   2/3   -1/3 | 2    → y1 = 2
+0  | 0   1   -1/3  2/3  | 1    → y2 = 1
+linha Z1 sem negativo → solução ótima
+
+x1 = 4 (linha Z1, coluna yf1)
+x2 = 4 (linha Z1, coluna yf2)
+
+Z = 5x1 + 4x2
+Z = 5 · 4 + 4 · 4
+Z = 20 + 16
+┌────────┐
+│ Z = 36 │
+└────────┘
+```
+"""
 MISTO = """
 max Z = x1 + 2x2
 x1 + x2 <= 4
@@ -145,6 +197,20 @@ class TestLeitura(unittest.TestCase):
         with self.assertRaisesRegex(r.ErroResolver, "não suportad"):
             r.ler("max Z = x1\nx1 <= 4\nx1 <= 0\nresolver: primal\n")
 
+    def test_le_a_descricao_das_variaveis(self):  # a descrição pode ter ponto e "5,00" sem virar decimal
+        p = r.ler("x1: quantidade do produto 1 (custo R$ 5,00)\nx2: quantidade do produto 2. Em kg\n" + Q1)
+        self.assertEqual(p.descricoes, {"x1": "quantidade do produto 1 (custo R$ 5,00)",
+                                        "x2": "quantidade do produto 2. Em kg"})
+        self.assertFalse(p.usa_decimal)
+
+    def test_recusa_descricao_de_so_algumas_variaveis(self):
+        with self.assertRaisesRegex(r.ErroEntrada, "x2"):
+            r.ler("x1: quantidade do produto 1\n" + Q1)
+
+    def test_recusa_descricao_de_variavel_que_nao_existe(self):
+        with self.assertRaisesRegex(r.ErroEntrada, "x3"):
+            r.ler("x1: a\nx2: b\nx3: c\n" + Q1)
+
     def test_recusa_letras_diferentes(self):
         with self.assertRaisesRegex(r.ErroEntrada, "letra"):
             r.ler("max Z = x1 + y2\nx1 + y2 <= 4\nx1, y2 >= 0\nresolver: primal\n")
@@ -160,8 +226,8 @@ class TestNumeros(unittest.TestCase):
 
 
 class TestExemplosDoCaderno(unittest.TestCase):
-    def test_3_1_quadro_depois_da_1a_iteracao_igual_ao_caderno(self):  # o 3º quadro do caderno
-        q = resolver(EX_3_1).quadros[1].linhas
+    def test_3_1_terceiro_quadro_igual_ao_caderno(self):
+        q = resolver(EX_3_1).quadros[2].linhas
         self.assertEqual(q["LZ"], [1, F(-1, 3), 0, 0, F(4, 3), 12])
         self.assertEqual(q["L1"], [0, F(4, 3), 0, 1, F(-1, 3), 3])
         self.assertEqual(q["L2"], [0, F(2, 3), 1, 0, F(1, 3), 3])
@@ -173,7 +239,7 @@ class TestExemplosDoCaderno(unittest.TestCase):
 
     def test_3_2_continua_enquanto_houver_negativo_na_lz(self):  # o caderno parou em Z = 10,2
         res = resolver(EX_3_2)
-        self.assertEqual(res.quadros[1].linhas["L2"], [0, F(-1, 2), 1, 0, F(1, 2), 0, 2])
+        self.assertEqual(res.quadros[2].linhas["L2"], [0, F(-1, 2), 1, 0, F(1, 2), 0, 2])
         self.assertEqual([p[1] for p in res.pivos], ["x2", "x1", "xf2"])
         self.assertEqual((res.valores["x1"], res.valores["x2"], res.z), (F(9, 2), F(3, 2), F(27, 2)))
 
@@ -318,7 +384,7 @@ class TestSaida(unittest.TestCase):
     def test_cli_imprime_a_resposta(self):
         saida = self.rodar(EX_3_1)
         self.assertEqual(saida.returncode, 0, saida.stderr)
-        self.assertIn("**Resposta:** x1 = 9/4 = 2,25; x2 = 3/2 = 1,5; Z = 51/4 = 12,75", saida.stdout)
+        self.assertIn("│ Z = 51/4 = 12,75 │", saida.stdout)
 
     def test_cli_erro_de_formato_sai_com_codigo_1(self):
         saida = self.rodar("max Z = x1\nx1 <= 30.000\nx1 >= 0\nresolver: primal\n")
@@ -335,28 +401,51 @@ class TestSaida(unittest.TestCase):
     def test_saida_do_dual_de_min_mostra_o_dual_e_a_resposta_em_x(self):
         texto = r.gerar_saida(r.ler(AT_2))
         self.assertIn("Max Z1 = 20y1 + 30y2 + 40y3 + 50y4", texto)
-        self.assertIn("**Resposta:** x1 = 0; x2 = 5/2 = 2,5; x3 = 25/2 = 12,5; Z = 35/2 = 17,5", texto)
+        self.assertIn("x2 = 5/2 = 2,5 (linha Z1, coluna yf2)", texto)
+        self.assertIn("│ Z = 35/2 = 17,5 │", texto)
 
     def test_saida_do_dual_mantem_os_decimais_do_enunciado(self):
         texto = r.gerar_saida(r.ler(AT_1))
         self.assertIn("0,5y1 + 0,1y2 + 0,4y3 ≥ 3", texto)
-        self.assertIn("Z = 240/13 ≈ 18,46", texto)
+        self.assertIn("│ Z = 240/13 ≈ 18,46 │", texto)
 
-    def test_saida_mostra_as_operacoes_de_cada_iteracao(self):
-        texto = r.gerar_saida(r.ler(EX_3_1))
-        self.assertIn("Operações: L2 ÷ 3; LZ + 4 × L2; L1 - 1 × L2", texto)
-        self.assertIn("Operações: L1 ÷ 4/3; LZ + 1/3 × L1; L2 - 2/3 × L1", texto)
+    def test_duas_fases_marca_a_linha_menos_w(self):  # como na atividade 1
+        texto = r.gerar_saida(r.ler(AT_1))
+        self.assertRegex(texto, r"\n-W +\| -4/5 ")
+        self.assertIn("Fase 1", texto)
+        self.assertIn("W = 0 → fim da Fase 1", texto)
 
-    def test_saida_e_enxuta(self):  # só o que se copia: um quadro por iteração, sem contas de rascunho
+    def test_saida_e_so_o_quadro_de_copiar(self):  # fora do bloco, só a legenda
+        for questao in (EX_3_1, AT_1, AT_2, Q1, MISTO):
+            texto = r.gerar_saida(r.ler(questao))
+            self.assertEqual(texto.count("```"), 2)
+            antes, bloco, depois = texto.split("```")
+            self.assertTrue(antes.startswith("**Copie no caderno só o que está dentro do quadro abaixo.**"))
+            self.assertEqual(depois.strip(), "")
+            for fora in ("LZ", "L1", "Passo", "Multiplicadores", "Conferência", "Operações", "Método", "**"):
+                self.assertNotIn(fora, bloco)
+
+    def test_saida_tem_dois_quadros_por_iteracao(self):  # pivô ≠ 1: o quadro do pivô e o da linha dividida
         texto = r.gerar_saida(r.ler(EX_3_1))
-        self.assertEqual(texto.count("**Quadro "), 3)
-        for rascunho in ("Passo", "Multiplicadores", "Conferência", "linha pivô dividida"):
-            self.assertNotIn(rascunho, texto)
+        self.assertEqual(len(re.findall(r"^Z +\| x1", texto, re.M)), 5)
+        self.assertIn("0 | 2   (3)  0    1   | 9   ÷3", texto)
+
+    def test_pivo_igual_a_1_nao_repete_o_quadro(self):
+        texto = r.gerar_saida(r.ler("max Z = x1 + x2\nx1 <= 1\nx2 <= 2\nx1, x2 >= 0\nresolver: primal\n"))
+        self.assertEqual(len(re.findall(r"^Z +\| x1", texto, re.M)), 3)
+        self.assertNotIn("÷", texto.split("```")[1])
+
+    def test_descricao_das_variaveis_abre_o_quadro(self):
+        texto = r.gerar_saida(r.ler("x1: quantidade do produto 1\nx2: quantidade do produto 2\n" + Q1))
+        self.assertIn("```text\nx1 = quantidade do produto 1\nx2 = quantidade do produto 2\n\nMin Z", texto)
+
+    def test_modo_modelo_escreve_so_as_descricoes_e_o_modelo(self):
+        texto = r.gerar_saida(r.ler("x1: produto 1\nx2: produto 2\n" + Q1.replace("dual", "modelo")))
+        self.assertIn("```text\nx1 = produto 1\nx2 = produto 2\n\nMin Z = 5x1 + 4x2\n"
+                      "{ 2x1 + x2 ≥ 12\n{ x1 + 2x2 ≥ 12\n{ x1, x2 ≥ 0\n```", texto)
 
     def test_saida_da_questao_1(self):
-        texto = r.gerar_saida(r.ler(Q1))
-        self.assertIn("Max Z1 = 12y1 + 12y2", texto)
-        self.assertIn("**Resposta:** x1 = 4; x2 = 4; Z = 36", texto)
+        self.assertEqual(r.gerar_saida(r.ler(Q1)), SAIDA_Q1)
 
 
 if __name__ == "__main__":
